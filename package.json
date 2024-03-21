@@ -2,6 +2,7 @@
   "name": "ghissuetestbot",
   "version": "1.0.0",
   "private": true,
+  "type": "commonjs",
   "description": "A Probot app",
   "author": "Eric Mesquita",
   "license": "ISC",
@@ -19,6 +20,7 @@
     "axios": "^1.6.7",
     "dotenv": "^16.4.1",
     "googleapis": "^132.0.0",
+    "mongodb": "^6.5.0",
     "openai": "^4.28.0",
     "probot": "^12.2.4"
   },

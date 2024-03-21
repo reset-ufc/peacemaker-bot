@@ -1,3 +1,5 @@
+/*
+
 const axios = require('axios');
 
 module.exports = async function getFriendlyComment(toxicComment) {
@@ -23,3 +25,4 @@ module.exports = async function getFriendlyComment(toxicComment) {
 
   return gptResponse.data.choices[0].text;
 };
+*/
