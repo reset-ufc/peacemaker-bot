@@ -1,5 +1,5 @@
 const Probot = require("probot")
-const detectToxicity = require("../detection")
+const detectToxicity = require("../detection/index")
 const { client } = require("../mongo/connection")
 
 module.exports = async function monitorComments(context) {
@@ -7,6 +7,7 @@ module.exports = async function monitorComments(context) {
         await client.connect()
         const commentBody = context.payload.comment.body
         const toxicityScore = await detectToxicity(commentBody)
+        console.log(`Toxicity score for comment: ${toxicityScore}`)
 
         if (toxicityScore > 0.7) {
             const db = client.db("toxicComments")

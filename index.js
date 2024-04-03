@@ -2,7 +2,6 @@
  * This is the main entrypoint to your Probot app
 @param {import('probot').Probot} app
  */
-
 const monitorComments = require("./src/monitoring/index.js")
 // import getFriendlyComment from "./src/recommendation"
 
