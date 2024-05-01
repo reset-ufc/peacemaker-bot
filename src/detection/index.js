@@ -30,3 +30,35 @@ module.exports = async function detectToxicity(comment) {
             throw err
         })
 }
+
+module.exports = async function detectToxicity(comment) {
+    try {
+        const client = await google.discoverAPI(DISCOVERY_URL)
+        const analyzeRequest = {
+            comment: {
+                text: comment
+            },
+            requestedAttributes: {
+                TOXICITY: {}
+            }
+        }
+
+        const response = await client.comments.analyze({
+            key: API_KEY,
+            resource: analyzeRequest
+        })
+
+        if (
+            response.data &&
+            response.data.attributeScores &&
+            response.data.attributeScores.TOXICITY
+        ) {
+            return response.data.attributeScores.TOXICITY.summaryScore.value
+        } else {
+            throw new Error("Unable to get toxicity score")
+        }
+    } catch (err) {
+        console.error(err)
+        throw err
+    }
+}
