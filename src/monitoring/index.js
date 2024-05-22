@@ -1,6 +1,7 @@
 const Probot = require("probot")
 const detectToxicity = require("../detection/index")
 const getFriendlyComment = require("../recommendation/index")
+const reactToUserComment = require("../reaction/index")
 const { client } = require("../mongo/connection")
 
 module.exports = async function monitorComments(context) {
@@ -13,14 +14,15 @@ module.exports = async function monitorComments(context) {
         if (toxicityScore > 0.7) {
             const db = client.db("toxicComments")
             const collection = db.collection("comments")
-            const friendlyComment = await getFriendlyComment(commentBody)
-            console.log(`Friendly comment: ${friendlyComment}`)
+            // const friendlyComment = await getFriendlyComment(commentBody)
+            // console.log(`Friendly comment: ${friendlyComment}`)
+            await reactToUserComment(context, "confused")
             console.log("Toxic comment saved to database")
-            await collection.insertOne({
-                comment: commentBody,
-                toxicityScore,
-                friendlyComment: friendlyComment
-            })
+            // await collection.insertOne({
+            //     comment: commentBody,
+            //     toxicityScore,
+            //     friendlyComment: friendlyComment
+            // })
         }
     } catch (error) {
         console.error("Error processing comment:", error)
