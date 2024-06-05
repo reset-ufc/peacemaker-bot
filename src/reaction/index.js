@@ -3,6 +3,7 @@ module.exports = async function reactToUserComment(context, reactionType) {
     const comment_id = context.payload.comment.id
 
     try {
+        // React to the user's comment
         await context.octokit.reactions.createForIssueComment({
             owner,
             repo,
