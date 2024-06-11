@@ -19,6 +19,11 @@ module.exports = async function monitorComments(context) {
             await reactToUserComment(context, "confused")
             console.log("Toxic comment saved to database")
             await collection.insertOne({
+                id_comment: context.payload.comment.id,
+                id_user: context.payload.comment.user.id,
+                id_repo: context.payload.repository.id,
+                user_login: context.payload.comment.user.login,
+                repo_full_name: context.payload.repository.full_name,
                 comment: commentBody,
                 toxicityScore,
                 friendlyComment: friendlyComment
