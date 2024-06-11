@@ -1,6 +1,7 @@
 const Probot = require("probot")
 const detectToxicity = require("../detection/index")
 const getFriendlyComment = require("../recommendation/index")
+const reactToUserComment = require("../reaction/index")
 const { client } = require("../mongo/connection")
 
 module.exports = async function monitorComments(context) {
@@ -15,6 +16,7 @@ module.exports = async function monitorComments(context) {
             const collection = db.collection("comments")
             const friendlyComment = await getFriendlyComment(commentBody)
             console.log(`Friendly comment: ${friendlyComment}`)
+            await reactToUserComment(context, "confused")
             console.log("Toxic comment saved to database")
             await collection.insertOne({
                 comment: commentBody,
