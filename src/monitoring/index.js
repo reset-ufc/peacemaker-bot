@@ -6,7 +6,7 @@ const { client } = require("../mongo/connection")
 
 module.exports = async function monitorComments(context) {
     try {
-        // await client.connect()
+        await client.connect()
         const commentBody = context.payload.comment.body
         const toxicityScore = await detectToxicity(commentBody)
         console.log(`Toxicity score for comment: ${toxicityScore}`)
@@ -19,7 +19,7 @@ module.exports = async function monitorComments(context) {
             await reactToUserComment(context, "confused")
             console.log("Toxic comment saved to database")
             await collection.insertOne({
-                id_comment: context.payload.comment.id,
+                comment_id: context.payload.comment.id,
                 id_user: context.payload.comment.user.id,
                 id_repo: context.payload.repository.id,
                 user_login: context.payload.comment.user.login,
@@ -31,7 +31,5 @@ module.exports = async function monitorComments(context) {
         }
     } catch (error) {
         console.error("Error processing comment:", error)
-    } finally {
-        await client.close()
     }
 }
