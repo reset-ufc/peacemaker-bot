@@ -1,0 +1,14 @@
+const llmResponse = require("../llm/index.js")
+
+module.exports = async function getCommentClassification(toxicComment) {
+    const classificationPrompt =
+        "you are a incivility classifier, your job is to classify messages in the following incivility types: \nbitter_frustration = anger and disappointment at being treated unfairly\nmocking = making fun of someone or something in a cruel way\nirony = the expression of one's meaning by using language that normally signifies the opposite, typically for humorous or emphatic effect.\ninsulting = disrespectful or scornfully abusive.\nvulgarity = the quality of being rude and likely to upset or anger people, especially by referring to sex or the body, or something such as a phrase that is rude in this way\nidentity_attack = the act of making damaging remarks relating to somebody's lifestyle or choices. These types of attack can include comments that question a person's intelligence, values, integrity, motivations or decisions.\nentitlement = belief that one is deserving of or entitled to certain privileges\nimpatience = the feeling of being annoyed by someone's mistakes or because you have to wait\nthreat = a statement of an intention to inflict pain, injury, damage, or other hostile action on someone in retribution for something done or not done.\nneutral = no incivility found\n\nyor response must be in this json format: {\"incivlity\": \"the type of incivility\"}\n"
+
+    try {
+        const classification = llmResponse(classificationPrompt, toxicComment)
+        return classification
+    } catch (error) {
+        console.error("Error fetching classification:", error)
+        throw error // Rethrow the error or handle it as needed
+    }
+}
