@@ -34,10 +34,13 @@ module.exports = async function monitorComments(context) {
                 id_repo: context.payload.repository.id,
                 user_login: context.payload.comment.user.login,
                 repo_full_name: context.payload.repository.full_name,
+                created_at: context.payload.comment.created_at,
                 comment: commentBody,
                 classification: classification.choices[0].message.content,
                 toxicityScore,
-                friendlyComment: friendlyComment.choices[0].message.content
+                friendlyComment: friendlyComment.choices[0].message.content,
+                solved: false,
+                solution: null // Fixed, ignored or disputed
             })
         }
     } catch (error) {
