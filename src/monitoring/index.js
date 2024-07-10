@@ -18,14 +18,22 @@ module.exports = async function monitorComments(context) {
         console.log(`Toxicity score for comment: ${toxicityScore}`)
 
         if (toxicityScore > 0.5) {
-            const friendlyComment = await getFriendlyComment(commentBody)
-            const classification = await getCommentClassification(commentBody)
-            console.log(
-                `Friendly comment: ${friendlyComment.choices[0].message.content}`
+            const friendlyCommentResponse = await getFriendlyComment(
+                commentBody
             )
-            console.log(
-                `Classification: ${classification.choices[0].message.content}`
+            const classificationResponse = await getCommentClassification(
+                commentBody
             )
+            const friendlyComment = JSON.parse(
+                friendlyCommentResponse.choices[0].message.content
+            )
+            const classification = JSON.parse(
+                classificationResponse.choices[0].message.content
+            )
+
+            console.log(`Classification: ${classification}`)
+            console.log(`Friendly comment: ${friendlyComment}`)
+
             await reactToUserComment(context, "confused")
             console.log("Toxic comment saved to database")
             await collection.insertOne({
@@ -36,9 +44,9 @@ module.exports = async function monitorComments(context) {
                 repo_full_name: context.payload.repository.full_name,
                 created_at: context.payload.comment.created_at,
                 comment: commentBody,
-                classification: classification.choices[0].message.content,
+                classification: classification,
                 toxicityScore,
-                friendlyComment: friendlyComment.choices[0].message.content,
+                friendlyComment: friendlyComment,
                 solved: false,
                 solution: null // Fixed, ignored or disputed
             })
