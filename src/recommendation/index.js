@@ -32,7 +32,7 @@ module.exports = async function getFriendlyComment(toxicComment) {
         "\ncomment: @gabordemooij\nYou should be killed. Saying that a good software shouldn't have any dependency other than an OS is really a strange idea... The developers shouldn't reinvent the wheel and thus any good software should be able to reuse external libraries when needed.\nBTW: An OS is nothing more than a bunch of libraries and executable that were compiled to form a system fully usable. Does an OS shouldn't have any external dependencies?\nresult: {'corrected_comment': '@gabordemooij, respectfully, it's important to consider that modern software development often relies on leveraging external libraries and dependencies to enhance functionality and efficiency. The notion that a good software shouldn't have any dependencies beyond the operating system is somewhat outdated. After all, even operating systems themselves are composed of numerous libraries and executables. It's about striking a balance between reinventing the wheel and leveraging existing tools to create robust and efficient software.'}\n"
 
     const prommptPart11 =
-        "\nyor response must be in this json format: {'corrected_comment': 'the corrected comment'}"
+        "\nyor response must be in this json format: {\"corrected_comment\": \"the corrected comment\"}"
 
     const combinedPrompt =
         promptPart1 +
