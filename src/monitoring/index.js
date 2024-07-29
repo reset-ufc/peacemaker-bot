@@ -1,16 +1,18 @@
 const Probot = require("probot")
 const detectToxicity = require("../detection/index")
-const getFriendlyComment = require("../recommendation/index")
-const getCommentClassification = require("../classification/index")
+const getFriendlyComment = require("../llm/index")
+const getCommentClassification = require("../llm/index")
+const llmResquest = require("../llm/index")
 const reactToUserComment = require("../reaction/index")
 const { client } = require("../mongo/connection")
+const axios = require("axios")
 
 module.exports = async function monitorComments(context) {
     try {
         // Connect to the MongoDB database
-        await client.connect()
-        const db = client.db("PeaceMaker")
-        const collection = db.collection("comments")
+        // await client.connect()
+        // const db = client.db("PeaceMaker")
+        // const collection = db.collection("comments")
 
         // Get the comment body from the context payload
         const commentBody = context.payload.comment.body
@@ -36,20 +38,22 @@ module.exports = async function monitorComments(context) {
 
             await reactToUserComment(context, "confused")
             console.log("Toxic comment saved to database")
-            await collection.insertOne({
-                comment_id: context.payload.comment.id,
-                id_user: context.payload.comment.user.id,
-                id_repo: context.payload.repository.id,
-                user_login: context.payload.comment.user.login,
-                repo_full_name: context.payload.repository.full_name,
-                created_at: context.payload.comment.created_at,
-                comment: commentBody,
-                classification: classification,
-                toxicityScore,
-                friendlyComment: friendlyComment,
-                solved: false,
-                solution: null // Fixed, ignored or disputed
-            })
+            // Requisiton to save the comment using the API
+
+            // await collection.insertOne({
+            //     comment_id: context.payload.comment.id,
+            //     id_user: context.payload.comment.user.id,
+            //     id_repo: context.payload.repository.id,
+            //     user_login: context.payload.comment.user.login,
+            //     repo_full_name: context.payload.repository.full_name,
+            //     created_at: context.payload.comment.created_at,
+            //     comment: commentBody,
+            //     classification: classification,
+            //     toxicityScore,
+            //     friendlyComment: friendlyComment,
+            //     solved: false,
+            //     solution: null // Fixed, ignored or disputed
+            // })
         }
     } catch (error) {
         console.error("Error processing comment:", error)
