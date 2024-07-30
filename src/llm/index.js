@@ -29,24 +29,18 @@ async function llmRequest(prompt, toxicComment) {
     }
 }
 
-function readPromptClassification() {
-    const filePath = path.join(__dirname, "prompt-classification.json")
+function readPrompts() {
+    const filePath = path.join(__dirname, "prompts.json")
     const fileContent = fs.readFileSync(filePath, "utf-8")
     return JSON.parse(fileContent)
 }
 
-function readPromptRecommendation() {
-    const filePath = path.join(__dirname, "prompt-recommendation.json")
-    const fileContent = fs.readFileSync(filePath, "utf-8")
-    return JSON.parse(fileContent)
-}
-
-module.exports = async function getCommentClassification(toxicComment) {
+async function getCommentClassification(toxicComment) {
     try {
         // Classification prompt is taken from the llm/prompt-classification.json file
-        const classificationPrompt = readPromptClassification()
+        const classificationPrompt = readPrompts()
         const classification = llmRequest(
-            classificationPrompt.prompt,
+            classificationPrompt.prompt_classification,
             toxicComment
         )
         return classification
@@ -56,12 +50,12 @@ module.exports = async function getCommentClassification(toxicComment) {
     }
 }
 
-module.exports = async function getFriendlyComment(toxicComment) {
+async function getFriendlyComment(toxicComment) {
     try {
         // Fetch a friendly comment from the Groq API
-        const recommendationPrompt = readPromptRecommendation()
+        const recommendationPrompt = readPrompts()
         const friendlyComment = llmRequest(
-            recommendationPrompt.prompt,
+            recommendationPrompt.prompt_recommendation,
             toxicComment
         )
         return friendlyComment
@@ -69,4 +63,9 @@ module.exports = async function getFriendlyComment(toxicComment) {
         console.error("Error fetching friendly comment:", error)
         throw error // Rethrow the error or handle it as needed
     }
+}
+
+module.exports = {
+    getCommentClassification,
+    getFriendlyComment
 }
