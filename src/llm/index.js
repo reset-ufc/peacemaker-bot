@@ -1,7 +1,8 @@
-const axios = require("axios")
 const Groq = require("groq-sdk")
+const fs = require("fs")
+const path = require("path")
 
-module.exports = async function llmRequest(prompt, toxicComment) {
+async function llmRequest(prompt, toxicComment) {
     const groq = new Groq({
         apiKey: process.env.GROQ_API_KEY
     })
@@ -24,6 +25,44 @@ module.exports = async function llmRequest(prompt, toxicComment) {
         return llmResponse
     } catch (error) {
         console.error("Error fetching groq response:", error)
-        throw error // Rethrow the error or handle it as needed
     }
+}
+
+function readPrompts() {
+    const filePath = path.join(__dirname, "prompts.json")
+    const fileContent = fs.readFileSync(filePath, "utf-8")
+    return JSON.parse(fileContent)
+}
+
+async function getCommentClassification(toxicComment) {
+    try {
+        // Classification prompt is taken from the llm/prompt-classification.json file
+        const classificationPrompt = readPrompts()
+        const classification = llmRequest(
+            classificationPrompt.prompt_classification,
+            toxicComment
+        )
+        return classification
+    } catch (error) {
+        console.error("Error fetching classification:", error)
+    }
+}
+
+async function getFriendlyComment(toxicComment) {
+    try {
+        // Fetch a friendly comment from the Groq API
+        const recommendationPrompt = readPrompts()
+        const friendlyComment = llmRequest(
+            recommendationPrompt.prompt_recommendation,
+            toxicComment
+        )
+        return friendlyComment
+    } catch (error) {
+        console.error("Error fetching friendly comment:", error)
+    }
+}
+
+module.exports = {
+    getCommentClassification,
+    getFriendlyComment
 }
