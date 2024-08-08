@@ -25,7 +25,6 @@ async function llmRequest(prompt, toxicComment) {
         return llmResponse
     } catch (error) {
         console.error("Error fetching groq response:", error)
-        throw error // Rethrow the error or handle it as needed
     }
 }
 
@@ -46,7 +45,6 @@ async function getCommentClassification(toxicComment) {
         return classification
     } catch (error) {
         console.error("Error fetching classification:", error)
-        throw error // Rethrow the error or handle it as needed
     }
 }
 
@@ -61,7 +59,6 @@ async function getFriendlyComment(toxicComment) {
         return friendlyComment
     } catch (error) {
         console.error("Error fetching friendly comment:", error)
-        throw error // Rethrow the error or handle it as needed
     }
 }
 
