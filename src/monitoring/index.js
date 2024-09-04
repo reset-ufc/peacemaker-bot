@@ -2,11 +2,15 @@ const Probot = require("probot")
 const detectToxicity = require("../detection/index")
 const { getCommentClassification, getFriendlyComment } = require("../llm/index")
 const reactToUserComment = require("../reaction/index")
-const saveCommentRoute = process.env.SAVE_COMMENT_API_URL
-const axios = require("axios")
+const { client } = require("../mongo/connection")
 
 module.exports = async function monitorComments(context) {
     try {
+        // Connect to the MongoDB database
+        await client.connect()
+        const db = client.db("peacemaker")
+        const collection = db.collection("comments")
+
         // Get the comment body from the context payload
         const commentBody = context.payload.comment.body
         const toxicityScore = await detectToxicity(commentBody)
@@ -33,7 +37,7 @@ module.exports = async function monitorComments(context) {
             console.log("Toxic comment saved to database")
             // Requisiton to save the comment using the API
 
-            const response = await axios.post(saveCommentRoute, {
+            await collection.insertOne({
                 comment_id: context.payload.comment.id,
                 id_user: context.payload.comment.user.id,
                 id_repo: context.payload.repository.id,
@@ -48,10 +52,7 @@ module.exports = async function monitorComments(context) {
                 solution: null // Fixed, ignored, or disputed
             })
 
-            if (!response.status === 200) {
-                console.error("Error saving comment via API:", response.status)
-            }
-            console.log("Toxic comment saved via API")
+            console.log("Toxic comment saved")
         }
     } catch (error) {
         console.error("Error processing comment:", error)
