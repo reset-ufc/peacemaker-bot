@@ -33,7 +33,7 @@ module.exports = async function monitorComments(context) {
             console.log(`Classification: ${classification}`)
             console.log(`Friendly comment: ${friendlyComment}`)
 
-            await reactToUserComment(context, "confused")
+            await reactToUserComment(context, "eyes")
             console.log("Toxic comment saved to database")
             // Requisiton to save the comment using the API
 
