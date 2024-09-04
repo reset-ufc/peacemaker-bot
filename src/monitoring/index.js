@@ -1,17 +1,12 @@
 const Probot = require("probot")
 const detectToxicity = require("../detection/index")
-const getFriendlyComment = require("../recommendation/index")
-const getCommentClassification = require("../classification/index")
+const { getCommentClassification, getFriendlyComment } = require("../llm/index")
 const reactToUserComment = require("../reaction/index")
-const { client } = require("../mongo/connection")
+const saveCommentRoute = process.env.SAVE_COMMENT_API_URL
+const axios = require("axios")
 
 module.exports = async function monitorComments(context) {
     try {
-        // Connect to the MongoDB database
-        await client.connect()
-        const db = client.db("PeaceMaker")
-        const collection = db.collection("comments")
-
         // Get the comment body from the context payload
         const commentBody = context.payload.comment.body
         const toxicityScore = await detectToxicity(commentBody)
@@ -26,17 +21,19 @@ module.exports = async function monitorComments(context) {
             )
             const friendlyComment = JSON.parse(
                 friendlyCommentResponse.choices[0].message.content
-            )
+            ).corrected_comment
             const classification = JSON.parse(
                 classificationResponse.choices[0].message.content
-            )
+            ).incivility
 
             console.log(`Classification: ${classification}`)
             console.log(`Friendly comment: ${friendlyComment}`)
 
             await reactToUserComment(context, "confused")
             console.log("Toxic comment saved to database")
-            await collection.insertOne({
+            // Requisiton to save the comment using the API
+
+            const response = await axios.post(saveCommentRoute, {
                 comment_id: context.payload.comment.id,
                 id_user: context.payload.comment.user.id,
                 id_repo: context.payload.repository.id,
@@ -48,8 +45,13 @@ module.exports = async function monitorComments(context) {
                 toxicityScore,
                 friendlyComment: friendlyComment,
                 solved: false,
-                solution: null // Fixed, ignored or disputed
+                solution: null // Fixed, ignored, or disputed
             })
+
+            if (!response.status === 200) {
+                console.error("Error saving comment via API:", response.status)
+            }
+            console.log("Toxic comment saved via API")
         }
     } catch (error) {
         console.error("Error processing comment:", error)
