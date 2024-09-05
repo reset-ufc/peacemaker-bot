@@ -25,10 +25,14 @@ module.exports = async function monitorComments(context) {
             )
             const friendlyComment = JSON.parse(
                 friendlyCommentResponse.choices[0].message.content
-            ).corrected_comment
+                    .replace(/[\u2018\u2019]/g, "'")
+                    .replace(/[\u201c\u201d]/g, '"')
+            )
             const classification = JSON.parse(
                 classificationResponse.choices[0].message.content
-            ).incivility
+                    .replace(/[\u2018\u2019]/g, "'")
+                    .replace(/[\u201c\u201d]/g, '"')
+            )
 
             console.log(`Classification: ${classification}`)
             console.log(`Friendly comment: ${friendlyComment}`)
@@ -45,9 +49,9 @@ module.exports = async function monitorComments(context) {
                 repo_full_name: context.payload.repository.full_name,
                 created_at: context.payload.comment.created_at,
                 comment: commentBody,
-                classification: classification,
+                classification: classification.incivility,
                 toxicityScore,
-                friendlyComment: friendlyComment,
+                friendlyComment: friendlyComment.corrected_comment,
                 solved: false,
                 solution: null // Fixed, ignored, or disputed
             })
