@@ -11,4 +11,7 @@ module.exports = (app) => {
         await monitorComments(context)
     })
 
+    app.on("issue_comment.edited", async (context) => {
+        await monitorComments(context)
+    })
 }

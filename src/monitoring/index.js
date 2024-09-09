@@ -2,11 +2,15 @@ const Probot = require("probot")
 const detectToxicity = require("../detection/index")
 const { getCommentClassification, getFriendlyComment } = require("../llm/index")
 const reactToUserComment = require("../reaction/index")
-const saveCommentRoute = process.env.SAVE_COMMENT_API_URL
-const axios = require("axios")
+const { client } = require("../mongo/connection")
 
 module.exports = async function monitorComments(context) {
     try {
+        // Connect to the MongoDB database
+        await client.connect()
+        const db = client.db("peacemaker")
+        const collection = db.collection("comments")
+
         // Get the comment body from the context payload
         const commentBody = context.payload.comment.body
         const toxicityScore = await detectToxicity(commentBody)
@@ -21,19 +25,23 @@ module.exports = async function monitorComments(context) {
             )
             const friendlyComment = JSON.parse(
                 friendlyCommentResponse.choices[0].message.content
-            ).corrected_comment
+                    .replace(/[\u2018\u2019]/g, "'")
+                    .replace(/[\u201c\u201d]/g, '"')
+            )
             const classification = JSON.parse(
                 classificationResponse.choices[0].message.content
-            ).incivility
+                    .replace(/[\u2018\u2019]/g, "'")
+                    .replace(/[\u201c\u201d]/g, '"')
+            )
 
             console.log(`Classification: ${classification}`)
             console.log(`Friendly comment: ${friendlyComment}`)
 
-            await reactToUserComment(context, "confused")
+            await reactToUserComment(context, "eyes")
             console.log("Toxic comment saved to database")
             // Requisiton to save the comment using the API
 
-            const response = await axios.post(saveCommentRoute, {
+            await collection.insertOne({
                 comment_id: context.payload.comment.id,
                 id_user: context.payload.comment.user.id,
                 id_repo: context.payload.repository.id,
@@ -41,17 +49,14 @@ module.exports = async function monitorComments(context) {
                 repo_full_name: context.payload.repository.full_name,
                 created_at: context.payload.comment.created_at,
                 comment: commentBody,
-                classification: classification,
+                classification: classification.incivility,
                 toxicityScore,
-                friendlyComment: friendlyComment,
+                friendlyComment: friendlyComment.corrected_comment,
                 solved: false,
                 solution: null // Fixed, ignored, or disputed
             })
 
-            if (!response.status === 200) {
-                console.error("Error saving comment via API:", response.status)
-            }
-            console.log("Toxic comment saved via API")
+            console.log("Toxic comment saved")
         }
     } catch (error) {
         console.error("Error processing comment:", error)
