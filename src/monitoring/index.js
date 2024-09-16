@@ -7,8 +7,8 @@ const { client } = require("../mongo/connection")
 module.exports = async function monitorComments(context) {
     try {
         // Connect to the MongoDB database
-        await client.connect()
-        const db = client.db("peacemaker")
+        await client.connect()  
+        const db = client.db("PeaceMaker")
         const collection = db.collection("comments")
 
         // Get the comment body from the context payload
@@ -42,15 +42,15 @@ module.exports = async function monitorComments(context) {
             // Requisiton to save the comment using the API
 
             await collection.insertOne({
-                comment_id: context.payload.comment.id,
-                id_user: context.payload.comment.user.id,
-                id_repo: context.payload.repository.id,
+                comment_id: context.payload.comment.id.toString(),
+                id_user: context.payload.comment.user.id.toString(),
+                id_repo: context.payload.repository.id.toString(),
                 user_login: context.payload.comment.user.login,
                 repo_full_name: context.payload.repository.full_name,
                 created_at: context.payload.comment.created_at,
                 comment: commentBody,
                 classification: classification.incivility,
-                toxicityScore,
+                toxicityScore: toxicityScore.toString(),
                 friendlyComment: friendlyComment.corrected_comment,
                 solved: false,
                 solution: null // Fixed, ignored, or disputed
