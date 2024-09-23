@@ -7,8 +7,8 @@ const { client } = require("../mongo/connection")
 module.exports = async function monitorComments(context) {
     try {
         // Connect to the MongoDB database
-        await client.connect()  
-        const db = client.db("PeaceMaker")
+        await client.connect()
+        const db = client.db("peacemaker")
         const collection = db.collection("comments")
 
         // Get the comment body from the context payload
@@ -43,9 +43,9 @@ module.exports = async function monitorComments(context) {
 
             await collection.insertOne({
                 comment_id: context.payload.comment.id.toString(),
-                id_user: context.payload.comment.user.id.toString(),
-                id_repo: context.payload.repository.id.toString(),
-                user_login: context.payload.comment.user.login,
+                github_id: context.payload.comment.user.id.toString(),
+                repo_id: context.payload.repository.id.toString(),
+                login: context.payload.comment.user.login,
                 repo_full_name: context.payload.repository.full_name,
                 created_at: context.payload.comment.created_at,
                 comment: commentBody,
