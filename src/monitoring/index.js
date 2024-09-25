@@ -8,7 +8,7 @@ module.exports = async function monitorComments(context) {
     try {
         // Connect to the MongoDB database
         await client.connect()
-        const db = client.db("peacemaker")
+        const db = client.db(process.env.MONGODB_DB)
         const collection = db.collection("comments")
 
         // Get the comment body from the context payload
@@ -50,8 +50,8 @@ module.exports = async function monitorComments(context) {
                 created_at: context.payload.comment.created_at,
                 comment: commentBody,
                 classification: classification.incivility,
-                toxicityScore: toxicityScore.toString(),
-                friendlyComment: friendlyComment.corrected_comment,
+                toxicity_score: toxicityScore.toString(),
+                friendly_comment: friendlyComment.corrected_comment,
                 solved: false,
                 solution: null // Fixed, ignored, or disputed
             })
