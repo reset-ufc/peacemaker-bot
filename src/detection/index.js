@@ -26,7 +26,16 @@ module.exports = async function detectToxicity(comment) {
         ) {
             throw new Error("Unable to get toxicity score")
         }
-        return response.data.attributeScores.TOXICITY.summaryScore.value
+
+        return response.data
+        // {"attributeScores":
+        //     {"TOXICITY":
+        //         {"spanScores":  
+        //             [{"begin":0,"end":8,"score":
+        //                 {"value":0.93383175,"type":"PROBABILITY"}}],
+        // "summaryScore":{"value":0.93383175,"type":"PROBABILITY"}}},
+        // "languages":["en"],
+        // "detectedLanguages":["en"]}
     } catch (err) {
         console.error(err)
         throw err

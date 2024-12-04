@@ -37,9 +37,9 @@ function readPrompts() {
 async function getCommentClassification(toxicComment) {
     try {
         // Classification prompt is taken from the llm/prompt-classification.json file
-        const classificationPrompt = readPrompts()
+        const prompt = readPrompts()
         const classification = llmRequest(
-            classificationPrompt.prompt_classification,
+            prompt.prompt_classification_en,
             toxicComment
         )
         return classification
@@ -48,15 +48,26 @@ async function getCommentClassification(toxicComment) {
     }
 }
 
-async function getFriendlyComment(toxicComment) {
+async function getFriendlyComment(toxicComment, language) {
     try {
-        // Fetch a friendly comment from the Groq API
-        const recommendationPrompt = readPrompts()
+        if (language === "pt") {
+        const prompt = readPrompts()
         const friendlyComment = llmRequest(
-            recommendationPrompt.prompt_recommendation,
+            prompt.prompt_recommendation_pt,
             toxicComment
         )
+        
         return friendlyComment
+        } else if (language === "en") {
+            const prompt = readPrompts()
+            const friendlyComment = llmRequest(
+                prompt.prompt_recommendation_en,
+                toxicComment
+            )
+            return friendlyComment
+        } else {
+            throw new Error("Language not supported")
+        }
     } catch (error) {
         console.error("Error fetching friendly comment:", error)
     }
