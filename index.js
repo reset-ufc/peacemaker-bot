@@ -4,7 +4,7 @@
  */
 const monitorComments = require("./src/monitoring/index.js")
 
-module.exports = (app) => {
+module.exports = (app) => { 
     app.log.info("Yay, the app was loaded!")
 
     app.on("issue_comment.created", async (context) => {
