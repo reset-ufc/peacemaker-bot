@@ -1,45 +1,49 @@
-const config = require("../config")
-const { detectToxicity } = require("../services/perspective")
-const llmService = require("../services/llm")
-const GitHubService = require("../services/github")
-const DatabaseService = require("../services/database")
+const { TOXICITY_THRESHOLD } = require("../config/constants");
+const { detectToxicity } = require("../services/toxicityService");
+const { getCommentSuggestions } = require("../services/llmService");
+const { reactToComment } = require("../services/githubService");
+const { saveComment } = require("../services/dbService");
 
 async function handleComment(context) {
     try {
-        const comment = context.payload.comment.body
-        const toxicityScore = await detectToxicity(comment)
-
-        if (toxicityScore > config.TOXICITY_THRESHOLD) {
-            const [classification, friendlyComment] = await Promise.all([
-                llmService.getClassification(comment),
-                llmService.getFriendlyComment(comment)
-            ])
-
-            await Promise.all([
-                GitHubService.reactToComment(
-                    context,
-                    "eyes",
-                    context.payload.comment.user.login
-                ),
-                DatabaseService.saveComment({
-                    comment_id: context.payload.comment.id.toString(),
-                    github_id: context.payload.comment.user.id.toString(),
-                    repo_id: context.payload.repository.id.toString(),
-                    login: context.payload.comment.user.login,
-                    repo_full_name: context.payload.repository.full_name,
-                    created_at: context.payload.comment.created_at,
-                    comment,
-                    classification: classification?.incivility,
-                    toxicity_score: toxicityScore.toString(),
-                    friendly_comment: friendlyComment?.corrected_comment,
-                    solved: false,
-                    solution: null
-                })
-            ])
+        const commentBody = context.payload?.comment?.body;
+        if (!commentBody) {
+            console.error("Missing comment body in payload");
+            return;
         }
+
+        const perspectiveResponse = await detectToxicity(commentBody);
+        const toxicityScore = perspectiveResponse?.attributeScores?.TOXICITY?.summaryScore?.value || 0;
+        const language = perspectiveResponse?.languages?.[0] || "en";
+
+        let suggestions = {};
+        let classification = "neutral";
+        if (toxicityScore >= TOXICITY_THRESHOLD) {
+            const { friendlyComment, classification: returnedClassification } = await getCommentSuggestions(commentBody, language);
+            suggestions = {
+            corrected_comment: friendlyComment.corrected_comment
+            };
+            classification = returnedClassification.incivility;
+            await reactToComment(context, "eyes");
+        }
+
+        await saveComment({
+            comment_id: context.payload.comment.id.toString(),
+            user_id: context.payload.comment.user.id.toString(),
+            repository_id: context.payload.repository.id.toString(),
+            login: context.payload.comment.user.login,
+            repo_full_name: context.payload.repository.full_name,
+            created_at: context.payload.comment.created_at,
+            content: commentBody,
+            toxicity: toxicityScore.toString(),
+            suggestions,
+            classification,
+            solutioned: false,
+            solution: null
+        });
     } catch (error) {
-        console.error("Comment handling error:", error)
+        console.error("Comment handling error:", error);
     }
 }
 
-module.exports = handleComment
+module.exports = { handleComment };
