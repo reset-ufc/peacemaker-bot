@@ -39,10 +39,10 @@ async function handleComment(context) {
       content: commentBody,
       toxicity: toxicityScore.toString(),
       solutioned: false,
-      solution: null,
-      suggestions: { corrected_comment: null },
+      solution: "",
+      suggestions: { corrected_comment: "" },
       classification: "neutral",
-      bot_comment_id: null, 
+      bot_comment_id: "", 
     };
 
     let savedComment = await saveComment(commentData);
