@@ -7,11 +7,30 @@ async function saveComment(commentData) {
   try {
     await client.connect();
     const collection = client.db(MONGODB_DB).collection('comments');
-    await collection.insertOne(commentData);
+    const result = await collection.insertOne(commentData);
+    return result;
   } catch (error) {
     console.error('Database error:', error);
     throw error;
   }
 }
 
-module.exports = { saveComment };
+async function updateCommentToxicity(commentId, updateData) {
+  try {
+    await client.connect();
+    const collection = client.db(MONGODB_DB).collection('comments');
+    
+    await collection.updateOne(
+      { comment_id: commentId },
+      { $set: updateData }
+    );
+  } catch (error) {
+    console.error('Database update error:', error);
+    throw error;
+  }
+}
+
+module.exports = { 
+  saveComment,
+  updateCommentToxicity 
+};
