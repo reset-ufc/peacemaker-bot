@@ -1,7 +1,10 @@
+const { saveComment, updateCommentToxicity, findBotCommentId } = require('./dbService');
+
 async function reactToComment(context, reactionType) {
   const { owner, repo } = context.repo();
   const comment_id = context.payload.comment.id;
   const commenterLogin = context.payload.comment.user.login;
+  const issueNumber = context.payload.issue.number;
 
   try {
     await context.octokit.reactions.createForIssueComment({
@@ -14,11 +17,10 @@ async function reactToComment(context, reactionType) {
     const botComment = await context.octokit.issues.createComment({
       owner,
       repo,
-      issue_number: context.payload.issue.number,
+      issue_number: issueNumber,
       body: `@${commenterLogin} Hi there! We noticed some potentially concerning language in your recent comment. Would you mind reviewing our guidelines at https://github.com/apps/thepeacemakerbot? Let's work together to maintain a positive atmosphere.`,
     });
 
-    // Store the bot comment ID for potential removal later
     return botComment.data.id;
   } catch (error) {
     console.error('GitHub interaction error:', error);
@@ -30,39 +32,48 @@ async function removeReactionAndComment(context) {
   try {
     const { owner, repo } = context.repo();
     const comment_id = context.payload.comment?.id;
+    const issueNumber = context.payload.issue.number;
 
-    // Check if comment_id is valid
     if (!comment_id) {
       throw new Error("Comment ID is missing or undefined.");
     }
 
-    console.log("Removing reactions for comment ID:", comment_id);
-
-    // List all reactions on the comment
     const reactions = await context.octokit.reactions.listForIssueComment({
       owner,
       repo,
       comment_id,
     });
 
-    // Remove bot reactions (eyes)
     for (const reaction of reactions.data) {
       if (reaction.content === "eyes") {
         await context.octokit.reactions.deleteForIssueComment({
           owner,
           repo,
           comment_id,
-          reaction_id: reaction.id, // Use the reaction ID to delete
+          reaction_id: reaction.id,
         });
-        console.log(`Removed reaction ID: ${reaction.id}`);
       }
     }
+
+    const botCommentId = await findBotCommentId(comment_id);
+    
+    if (botCommentId) {
+      // 3. Delete the bot comment using the stored bot_comment_id
+      await context.octokit.issues.deleteComment({
+        owner,
+        repo,
+        comment_id: botCommentId, // Use bot_comment_id from the database
+      });
+      console.log(`Deleted bot comment with ID: ${botCommentId}`);
+    } else {
+      console.log("No bot comment found to delete.");
+    }
+    
   } catch (error) {
-    console.error("Error removing reactions:", error);
+    console.error("Error removing reactions and bot comment:", error);
     throw error;
   }
 }
-
 
 module.exports = { 
   reactToComment, 

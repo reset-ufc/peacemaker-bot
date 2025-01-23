@@ -19,7 +19,6 @@ async function handleComment(context) {
       return;
     }
 
-    // Check if the comment is from a bot using the type attribute
     if (userType === 'Bot') {
       console.log('Skipping bot comment');
       return;
@@ -43,33 +42,31 @@ async function handleComment(context) {
       solution: null,
       suggestions: { corrected_comment: null },
       classification: "neutral",
+      bot_comment_id: null, 
     };
 
     let savedComment = await saveComment(commentData);
 
-    // Handle toxic comments
     if (toxicityScore >= TOXICITY_THRESHOLD) {
       const { friendlyComment, classification } = await getCommentSuggestions(commentBody, language);
       
-      // Update comment with suggestions and classification
+      const botCommentId = await reactToComment(context, 'eyes');
+      
       const updatedCommentData = {
         ...commentData,
         suggestions: {
           corrected_comment: friendlyComment.corrected_comment,
         },
         classification: classification.incivility,
+        bot_comment_id: botCommentId.toString(), 
       };
 
       await updateCommentToxicity(commentId, updatedCommentData);
-
-      // React and comment for toxic comments
-      await reactToComment(context, 'eyes');
     }
   } catch (error) {
     console.error('Comment handling error:', error);
   }
 }
-
 
 async function handleCommentEdit(context) {
   try {
@@ -107,4 +104,4 @@ async function handleCommentEdit(context) {
 module.exports = { 
   handleComment,
   handleCommentEdit 
-};  
+};
