@@ -36,19 +36,19 @@ async function getCommentSuggestions(toxicComment, language) {
     const friendlyComment = await llmRequest(prompts[promptKey], toxicComment);
     const classification = await llmRequest(
       prompts.prompt_classification_en,
-      toxicComment
+      toxicComment,
     );
 
     return {
       friendlyComment: JSON.parse(
         friendlyComment.choices[0].message.content
           .replace(/[\u2018\u2019]/g, "'")
-          .replace(/[\u201c\u201d]/g, '"')
+          .replace(/[\u201c\u201d]/g, '"'),
       ),
       classification: JSON.parse(
         classification.choices[0].message.content
           .replace(/[\u2018\u2019]/g, "'")
-          .replace(/[\u201c\u201d]/g, '"')
+          .replace(/[\u201c\u201d]/g, '"'),
       ),
     };
   } catch (error) {

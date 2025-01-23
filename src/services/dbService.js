@@ -19,11 +19,8 @@ async function updateCommentToxicity(commentId, updateData) {
   try {
     await client.connect();
     const collection = client.db(MONGODB_DB).collection('comments');
-    
-    await collection.updateOne(
-      { comment_id: commentId },
-      { $set: updateData }
-    );
+
+    await collection.updateOne({ comment_id: commentId }, { $set: updateData });
   } catch (error) {
     console.error('Database update error:', error);
     throw error;
@@ -45,7 +42,7 @@ async function findBotCommentId(commentId) {
   }
 }
 
-module.exports = { 
+module.exports = {
   saveComment,
   updateCommentToxicity,
   findBotCommentId,

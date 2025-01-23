@@ -1,4 +1,8 @@
-const { saveComment, updateCommentToxicity, findBotCommentId } = require('./dbService');
+const {
+  saveComment,
+  updateCommentToxicity,
+  findBotCommentId,
+} = require('./dbService');
 
 async function reactToComment(context, reactionType) {
   const { owner, repo } = context.repo();
@@ -35,7 +39,7 @@ async function removeReactionAndComment(context) {
     const issueNumber = context.payload.issue.number;
 
     if (!comment_id) {
-      throw new Error("Comment ID is missing or undefined.");
+      throw new Error('Comment ID is missing or undefined.');
     }
 
     const reactions = await context.octokit.reactions.listForIssueComment({
@@ -45,7 +49,7 @@ async function removeReactionAndComment(context) {
     });
 
     for (const reaction of reactions.data) {
-      if (reaction.content === "eyes") {
+      if (reaction.content === 'eyes') {
         await context.octokit.reactions.deleteForIssueComment({
           owner,
           repo,
@@ -56,7 +60,7 @@ async function removeReactionAndComment(context) {
     }
 
     const botCommentId = await findBotCommentId(comment_id);
-    
+
     if (botCommentId) {
       // 3. Delete the bot comment using the stored bot_comment_id
       await context.octokit.issues.deleteComment({
@@ -66,16 +70,15 @@ async function removeReactionAndComment(context) {
       });
       console.log(`Deleted bot comment with ID: ${botCommentId}`);
     } else {
-      console.log("No bot comment found to delete.");
+      console.log('No bot comment found to delete.');
     }
-    
   } catch (error) {
-    console.error("Error removing reactions and bot comment:", error);
+    console.error('Error removing reactions and bot comment:', error);
     throw error;
   }
 }
 
-module.exports = { 
-  reactToComment, 
-  removeReactionAndComment 
+module.exports = {
+  reactToComment,
+  removeReactionAndComment,
 };

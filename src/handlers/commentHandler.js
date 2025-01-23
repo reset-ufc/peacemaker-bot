@@ -1,7 +1,10 @@
 const { TOXICITY_THRESHOLD } = require('../config/constants');
 const { detectToxicity } = require('../services/toxicityService');
 const { getCommentSuggestions } = require('../services/llmService');
-const { reactToComment, removeReactionAndComment } = require('../services/githubService');
+const {
+  reactToComment,
+  removeReactionAndComment,
+} = require('../services/githubService');
 const { saveComment, updateCommentToxicity } = require('../services/dbService');
 
 async function handleComment(context) {
@@ -10,7 +13,7 @@ async function handleComment(context) {
     const commentId = context.payload.comment.id.toString();
     const userId = context.payload.comment.user.id.toString();
     const userLogin = context.payload.comment.user.login;
-    const userType = context.payload.comment.user.type; 
+    const userType = context.payload.comment.user.type;
     const repositoryId = context.payload.repository.id.toString();
     const repoFullName = context.payload.repository.full_name;
 
@@ -25,7 +28,8 @@ async function handleComment(context) {
     }
 
     const perspectiveResponse = await detectToxicity(commentBody);
-    const toxicityScore = perspectiveResponse?.attributeScores?.TOXICITY?.summaryScore?.value || 0;
+    const toxicityScore =
+      perspectiveResponse?.attributeScores?.TOXICITY?.summaryScore?.value || 0;
     const language = perspectiveResponse?.languages?.[0] || 'en';
 
     // Always save the comment
@@ -39,26 +43,29 @@ async function handleComment(context) {
       content: commentBody,
       toxicity: toxicityScore.toString(),
       solutioned: false,
-      solution: "",
-      suggestions: { corrected_comment: "" },
-      classification: "neutral",
-      bot_comment_id: "", 
+      solution: '',
+      suggestions: { corrected_comment: '' },
+      classification: 'neutral',
+      bot_comment_id: '',
     };
 
     let savedComment = await saveComment(commentData);
 
     if (toxicityScore >= TOXICITY_THRESHOLD) {
-      const { friendlyComment, classification } = await getCommentSuggestions(commentBody, language);
-      
+      const { friendlyComment, classification } = await getCommentSuggestions(
+        commentBody,
+        language,
+      );
+
       const botCommentId = await reactToComment(context, 'eyes');
-      
+
       const updatedCommentData = {
         ...commentData,
         suggestions: {
           corrected_comment: friendlyComment.corrected_comment,
         },
         classification: classification.incivility,
-        bot_comment_id: botCommentId.toString(), 
+        bot_comment_id: botCommentId.toString(),
       };
 
       await updateCommentToxicity(commentId, updatedCommentData);
@@ -90,7 +97,7 @@ async function handleCommentEdit(context) {
 
     if (toxicityScore < TOXICITY_THRESHOLD) {
       await removeReactionAndComment(context);
-      
+
       await updateCommentToxicity(commentId, {
         toxicity: toxicityScore.toString(),
         solutioned: true,
@@ -101,7 +108,7 @@ async function handleCommentEdit(context) {
   }
 }
 
-module.exports = { 
+module.exports = {
   handleComment,
-  handleCommentEdit 
+  handleCommentEdit,
 };
