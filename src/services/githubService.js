@@ -57,8 +57,6 @@ async function removeReactionAndComment(context) {
         console.log(`Removed reaction ID: ${reaction.id}`);
       }
     }
-
-    console.log("All targeted reactions removed successfully.");
   } catch (error) {
     console.error("Error removing reactions:", error);
     throw error;

@@ -6,37 +6,43 @@ const { saveComment, updateCommentToxicity } = require('../services/dbService');
 
 async function handleComment(context) {
   try {
+    const commentBody = context.payload?.comment?.body;
+    const commentId = context.payload.comment.id.toString();
+    const userId = context.payload.comment.user.id.toString();
+    const userLogin = context.payload.comment.user.login;
+    const userType = context.payload.comment.user.type; 
+    const repositoryId = context.payload.repository.id.toString();
+    const repoFullName = context.payload.repository.full_name;
 
     if (!commentBody) {
       console.error('Missing comment body in payload');
       return;
     }
 
-    // Check if the comment is from a bot
-    if (userLogin.toLowerCase().includes('bot')) {
+    // Check if the comment is from a bot using the type attribute
+    if (userType === 'Bot') {
       console.log('Skipping bot comment');
       return;
     }
 
     const perspectiveResponse = await detectToxicity(commentBody);
-    const toxicityScore =
-      perspectiveResponse?.attributeScores?.TOXICITY?.summaryScore?.value || 0;
+    const toxicityScore = perspectiveResponse?.attributeScores?.TOXICITY?.summaryScore?.value || 0;
     const language = perspectiveResponse?.languages?.[0] || 'en';
 
     // Always save the comment
     const commentData = {
-      comment_id: context.payload.comment.id.toString(),
-      user_id: context.payload.comment.user.id.toString(),
-      repository_id: context.payload.repository.id.toString(),
-      login: context.payload.comment.user.login,
-      repo_full_name: context.payload.repository.full_name,
+      comment_id: commentId,
+      user_id: userId,
+      repository_id: repositoryId,
+      login: userLogin,
+      repo_full_name: repoFullName,
       created_at: context.payload.comment.created_at,
-      content: context.payload?.comment?.body,
+      content: commentBody,
       toxicity: toxicityScore.toString(),
       solutioned: false,
       solution: null,
+      suggestions: { corrected_comment: null },
       classification: "neutral",
-      suggestions: null,
     };
 
     let savedComment = await saveComment(commentData);
@@ -64,14 +70,20 @@ async function handleComment(context) {
   }
 }
 
-// New function to handle comment edits specifically
+
 async function handleCommentEdit(context) {
   try {
     const commentBody = context.payload?.comment?.body;
     const commentId = context.payload.comment.id.toString();
+    const userType = context.payload.comment.user.type;
 
     if (!commentBody) {
       console.error('Missing comment body in payload');
+      return;
+    }
+
+    if (userType === 'Bot') {
+      console.log('Skipping bot comment edit');
       return;
     }
 
@@ -79,11 +91,9 @@ async function handleCommentEdit(context) {
     const toxicityScore =
       perspectiveResponse?.attributeScores?.TOXICITY?.summaryScore?.value || 0;
 
-    // If comment is now non-toxic, remove previous reactions and comments
     if (toxicityScore < TOXICITY_THRESHOLD) {
       await removeReactionAndComment(context);
       
-      // Update comment toxicity in database
       await updateCommentToxicity(commentId, {
         toxicity: toxicityScore.toString(),
         solutioned: true,
