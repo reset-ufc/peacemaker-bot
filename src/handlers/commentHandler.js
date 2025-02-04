@@ -38,6 +38,7 @@ async function handleComment(context) {
       created_at: context.payload.comment.created_at,
       content: commentBody,
       toxicity: toxicityScore.toString(),
+      score: toxicityScore,
       solutioned: false,
       solution: "",
       suggestions: { corrected_comment: "" },
