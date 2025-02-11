@@ -4,13 +4,13 @@
  */
 const { handleComment, handleCommentEdit } = require("./src/handlers/commentHandler");
 
-module.exports = (app) => {
+module.exports = async (app) => {
+
     app.log.info("Peacemaker bot started!");
 
     // Save all comments
     app.on("issue_comment.created", handleComment);
-    
+
     // Handle toxic comment edits
     app.on("issue_comment.edited", handleCommentEdit);
 };
-

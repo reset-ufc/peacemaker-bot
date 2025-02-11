@@ -13,7 +13,7 @@
     "probot-app"
   ],
   "scripts": {
-    "start": "PORT=4000 probot run ./index.js",
+    "start": "probot run ./index.js",
     "lint": "eslint .",
     "format": "prettier --write src/**/*.js"
   },
