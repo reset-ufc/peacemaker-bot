@@ -59,12 +59,12 @@ async function getCommentSuggestions(toxicComment, language) {
 
 // For testing purposes
 // const main = async () => {
-//   const suggestion = await getCommentSuggestions(
+//   const { friendlyComment } = await getCommentSuggestions(
 //     "@1M0RR1V3L fuck you this bot don't run, any way bro, make the L!!! (again) Fuck our code",
 //     'en',
 //   );
 
-//   console.log(suggestion);
+//   console.log(friendlyComment);
 // };
 
 // main();

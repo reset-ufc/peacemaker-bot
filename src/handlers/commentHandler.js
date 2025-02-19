@@ -32,7 +32,7 @@ async function handleComment(context) {
       perspectiveResponse?.attributeScores?.TOXICITY?.summaryScore?.value || 0;
     const language = perspectiveResponse?.languages?.[0] || 'en';
 
-    // Always save the comment
+    // Always save the comment.
     const commentData = {
       comment_id: commentId,
       user_id: userId,
@@ -45,12 +45,12 @@ async function handleComment(context) {
       score: toxicityScore,
       solutioned: false,
       solution: '',
-      suggestions: { corrected_comment: '' },
+      suggestions: [{ corrected_comment: '' }],
       classification: 'neutral',
       bot_comment_id: '',
     };
 
-    let savedComment = await saveComment(commentData);
+    await saveComment(commentData);
 
     if (toxicityScore >= TOXICITY_THRESHOLD) {
       const { friendlyComment, classification } = await getCommentSuggestions(
@@ -58,13 +58,15 @@ async function handleComment(context) {
         language,
       );
 
+      const suggestions = friendlyComment.map(suggestion => ({
+        corrected_comment: suggestion.corrected_comment,
+      }));
+
       const botCommentId = await reactToComment(context, 'eyes');
 
       const updatedCommentData = {
         ...commentData,
-        suggestions: {
-          corrected_comment: friendlyComment.corrected_comment,
-        },
+        suggestions,
         classification: classification.incivility,
         bot_comment_id: botCommentId.toString(),
       };
