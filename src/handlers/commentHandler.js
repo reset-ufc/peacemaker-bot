@@ -5,7 +5,11 @@ const {
   reactToComment,
   removeReactionAndComment,
 } = require('../services/githubService');
-const { saveComment, updateCommentToxicity } = require('../services/dbService');
+const {
+  saveComment,
+  saveSuggestion,
+  updateCommentToxicity,
+} = require('../services/dbService');
 
 async function handleComment(context) {
   try {
@@ -62,11 +66,15 @@ async function handleComment(context) {
         corrected_comment: suggestion.corrected_comment,
       }));
 
+      // Salva a sugestão no banco de dados
+      // eslint-disable-next-line no-unused-vars
+      const suggestionsDoc = await saveSuggestion(suggestions);
+
       const botCommentId = await reactToComment(context, 'eyes');
 
       const updatedCommentData = {
         ...commentData,
-        suggestions,
+        // suggestion: suggestionsDoc.insertedId,
         classification: classification.incivility,
         bot_comment_id: botCommentId.toString(),
       };

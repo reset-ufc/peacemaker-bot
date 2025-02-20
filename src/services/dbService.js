@@ -15,6 +15,19 @@ async function saveComment(commentData) {
   }
 }
 
+// TODO: Precisa de correção, ao salvar as sugestões, adiciona um id para identificar na hora do feedback.
+async function saveSuggestion(suggestionData) {
+  try {
+    await client.connect();
+    const collection = client.db(MONGODB_DB).collection('suggestions');
+    const result = await collection.insertOne(suggestionData);
+    return result;
+  } catch (error) {
+    console.error('Database error:', error);
+    throw error;
+  }
+}
+
 async function updateCommentToxicity(commentId, updateData) {
   try {
     await client.connect();
@@ -44,6 +57,7 @@ async function findBotCommentId(commentId) {
 
 module.exports = {
   saveComment,
+  saveSuggestion,
   updateCommentToxicity,
   findBotCommentId,
 };
