@@ -1,4 +1,3 @@
-import { ObjectId } from 'mongodb';
 import mongoose, { Schema, Types } from 'mongoose';
 
 export enum CommentType {
@@ -33,7 +32,7 @@ export interface CommentDocument extends mongoose.Document {
   solutioned: boolean; // se o comentário foi solucionado
   solution: string; // solução do comentário (sugestão que foi aceita ou escrita pelo autor)
   solution_analyzed_at: Date; // data em que a solução foi analisada
-  solution_id: ObjectId; // id da solução do comentário
+  solution_id: Types.ObjectId; // id da solução do comentário
 
   // Metadados do evento
   event_type: string; // tipo de evento
@@ -65,9 +64,9 @@ const CommentSchema = new Schema<CommentDocument>({
   classification: { type: String, required: true },
 
   solutioned: { type: Boolean, required: true, default: false },
-  solution: { type: String, required: false },
-  solution_analyzed_at: { type: Date, required: false },
-  solution_id: { type: Types.ObjectId, required: false },
+  solution: { type: String, required: false, default: '' },
+  solution_analyzed_at: { type: Date, required: false, default: null },
+  solution_id: { type: Schema.Types.ObjectId, required: false, default: null },
 
   event_type: { type: String, required: true },
   installation_id: { type: Number, required: true },
