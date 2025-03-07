@@ -22,7 +22,7 @@ async function analyzeToxicity(text: string) {
 
   return {
     toxicityScore: response.data.attributeScores.TOXICITY.summaryScore.value,
-    language: response.languages[0],
+    language: response.languages,
   };
 }
 
@@ -30,11 +30,11 @@ export const mock_analyzeToxicity = async (
   text: string,
 ): Promise<{ toxicityScore: number; language: string }> => {
   console.log('MOCKING ANALYZE TOXICITY: ', text);
-  return { toxicityScore: 0.4, language: 'en' };
+  return { toxicityScore: 0.943, language: 'en' };
 };
 
-analyzeToxicity(
-  "@1M0RR1V3L fuck you this bot don't run, any way bro, make the L!!! (again) Fuck our code",
-).then(response => {
-  console.log('response', JSON.stringify({ response }, null, 2));
-});
+// analyzeToxicity(
+//   "@1M0RR1V3L fuck you this bot don't run, any way bro, make the L!!! (again) Fuck our code",
+// ).then(response => {
+//   console.log('response', JSON.stringify({ response }, null, 2));
+// });
