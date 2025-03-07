@@ -1,6 +1,6 @@
 import promptsJson from '../prompts/prompts.json';
 
-export function getPrompts(language: 'en' | ('pt' & string) = 'en'): {
+export function getPrompts(language: string = 'en'): {
   classification: string;
   recommendation: string;
 } {

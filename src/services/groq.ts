@@ -9,7 +9,7 @@ const groq = createGroq({
 
 export async function generateClassification(
   content: string,
-  language: 'en' | ('pt' & string) = 'en',
+  language: string = 'en',
 ) {
   const prompt = getPrompts(language);
 
@@ -28,7 +28,7 @@ export async function generateClassification(
 
 export async function generateSuggestions(
   content: string,
-  language: 'en' | ('pt' & string) = 'en',
+  language: string = 'en',
 ) {
   const prompt = getPrompts(language);
   const suggestions = await generateObject({
