@@ -29,7 +29,7 @@ export async function generateClassification(
 export async function generateSuggestions(
   content: string,
   language: string = 'en',
-) {
+): Promise<Array<{ content: string }>> {
   const prompt = getPrompts(language);
   const suggestions = await generateObject({
     model: groq('llama-3.3-70b-versatile'),
