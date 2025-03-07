@@ -1,0 +1,71 @@
+{
+  "issue": {
+    "html_url": "https: //github.com/meiazero/blob/issues/4",
+    "id": 2796998338,
+    "number": 4,
+    "state": "open",
+    "locked": false,
+    "assignee": null,
+    "assignees": [],
+    "sub_issues_summary": {
+      "total": 0,
+      "completed": 0,
+      "percent_completed": 0
+    }
+  },
+  "comment": {
+    "html_url": "https://github.com/meiazero/blob/issues/4#issuecomment-2705307245",
+    "issue_url": "https://api.github.com/repos/meiazero/blob/issues/4",
+    "id": 2705307245,
+    "user": {
+      "id": 76269418
+    },
+    "created_at": "2025-03-07T01: 28: 51Z",
+    "updated_at": "2025-03-07T01: 28: 51Z",
+    "author_association": "OWNER",
+    "body": "@meiazero Fuck your shit code, this don't run in any place, rewrite all this shit!",
+    "reactions": {
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    }
+  },
+  "repository": {
+    "id": 918463959,
+    "name": "blob",
+    "full_name": "meiazero/blob",
+    "private": true,
+    "owner": {
+      "id": 76269418
+    },
+    "html_url": "https: //github.com/meiazero/blob",
+    "has_issues": true,
+    "has_projects": true,
+    "has_downloads": true,
+    "has_wiki": true,
+    "has_pages": false,
+    "has_discussions": false,
+    "forks_count": 0,
+    "archived": false,
+    "disabled": false,
+    "open_issues_count": 1,
+    "license": null,
+    "is_template": false,
+    "open_issues": 1,
+    "watchers": 0,
+    "default_branch": "main"
+  },
+  "sender": {
+    "id": 76269418
+  },
+  "installation": {
+    "id": 59726669,
+    "node_id": "MDIzOkludGVncmF0aW9uSW5zdGFsbGF0aW9uNTk3MjY2Njk="
+  }
+}
