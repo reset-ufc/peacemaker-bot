@@ -1,6 +1,10 @@
 import { Comment, CommentType } from '../../models/comment';
+import { Suggestions } from '../../models/suggestions';
 import { mock_analyzeToxicity as analyzeToxicity } from '../../services/google-perspective';
-import { generateClassification } from '../../services/groq';
+import {
+  generateClassification,
+  generateSuggestions,
+} from '../../services/groq';
 
 export const handleIssueComment = async (context: any) => {
   const TOXICITY_THRESHOLD = 0.6;
@@ -86,5 +90,27 @@ export const handleIssueComment = async (context: any) => {
       body: `@${context.payload.sender.login} Hi there! We noticed some potentially concerning language in your recent comment. Would you mind reviewing our guidelines at https://github.com/apps/thepeacemakerbot? Let's work together to maintain a positive atmosphere.`,
     });
     console.log('botComment', JSON.stringify(botComment, null, 2));
+
+    // gera as sugestões de solução
+    const suggestions = await generateSuggestions(
+      comment.body.trim(),
+      pespertiveResponse.language,
+    );
+    console.log('suggestions', JSON.stringify(suggestions, null, 2));
+
+    // Cria um documento com as sugestões
+    const suggestionsData = {
+      gh_comment_id: comment.id,
+      suggestions: suggestions.map<{
+        content: string;
+      }>(suggestion => ({ content: suggestion.content })),
+      is_edited: false,
+    };
+
+    const suggestionsCreated = await Suggestions.create(suggestionsData);
+    console.log(
+      'suggestionsCreated',
+      JSON.stringify(suggestionsCreated, null, 2),
+    );
   }
 };
