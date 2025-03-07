@@ -1,6 +1,6 @@
 import { Comment, CommentType } from '../../models/comment';
 import { Suggestions } from '../../models/suggestions';
-import { mock_analyzeToxicity as analyzeToxicity } from '../../services/google-perspective';
+import { analyzeToxicity } from '../../services/google-perspective';
 import {
   generateClassification,
   generateSuggestions,
@@ -101,9 +101,9 @@ export const handleIssueComment = async (context: any) => {
     // Cria um documento com as sugestões
     const suggestionsData = {
       gh_comment_id: comment.id,
-      suggestions: suggestions.map<{
-        content: string;
-      }>(suggestion => ({ content: suggestion.content })),
+      suggestions: suggestions.map(suggestion => ({
+        content: suggestion.content,
+      })),
       is_edited: false,
     };
 
