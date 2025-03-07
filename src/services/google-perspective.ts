@@ -1,7 +1,9 @@
 import { google } from 'googleapis';
 
-// TODO: Não está mais funcionando
-async function analyzeToxicity(text: string) {
+export async function analyzeToxicity(text: string): Promise<{
+  toxicityScore: number;
+  language: any;
+}> {
   const DISCOVERY_URL = process.env.DISCOVERY_URL;
   const PERSPECTIVE_API_KEY = process.env.PERSPECTIVE_API_KEY;
 
