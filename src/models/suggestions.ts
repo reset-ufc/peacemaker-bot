@@ -6,12 +6,14 @@ export interface SuggestionsDocument extends mongoose.Document {
     content: string; // solução sugerida
   }>; // sugestões do comentário
   is_edited: boolean; // se o comentário foi editado
+  suggestion_selected_index: number; // index da sugestão selecionada
 }
 
 const SuggestionsSchema = new Schema<SuggestionsDocument>({
   gh_comment_id: { type: String, required: true, unique: true },
   suggestions: [{ content: { type: String, required: true } }],
   is_edited: { type: Boolean, required: true, default: false },
+  suggestion_selected_index: { type: Number, required: true, default: null },
 });
 
 export const Suggestions = mongoose.model<SuggestionsDocument>(
