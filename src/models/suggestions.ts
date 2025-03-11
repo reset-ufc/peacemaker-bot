@@ -6,7 +6,7 @@ export interface SuggestionsDocument extends mongoose.Document {
     content: string; // solução sugerida
   }>; // sugestões do comentário
   is_edited: boolean; // se o comentário foi editado
-  suggestion_selected_index: number; // index da sugestão selecionada
+  suggestion_selected_index: number | null; // index da sugestão selecionada
 }
 
 const SuggestionsSchema = new Schema<SuggestionsDocument>({
