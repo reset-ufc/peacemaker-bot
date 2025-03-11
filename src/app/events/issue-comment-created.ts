@@ -1,5 +1,5 @@
 import { Comment, CommentType } from '../../models/comment';
-import { Suggestions } from '../../models/suggestions';
+import { Suggestions, SuggestionsDocument } from '../../models/suggestions';
 import { analyzeToxicity } from '../../services/google-perspective';
 import {
   generateClassification,
@@ -105,7 +105,8 @@ export const handleIssueComment = async (context: any) => {
         content: suggestion.content,
       })),
       is_edited: false,
-    };
+      suggestion_selected_index: null,
+    } as SuggestionsDocument;
 
     const suggestionsCreated = await Suggestions.create(suggestionsData);
     console.log(
