@@ -16,7 +16,9 @@ export async function generateClassification(
   const classification = await generateObject({
     model: groq('llama-3.3-70b-versatile'),
     schema: z.object({
-      classification: z.string(),
+      classification: z.object({
+        incivility: z.string(),
+      }),
     }),
     system: prompt.classification,
     prompt: content.trim(),
@@ -31,6 +33,7 @@ export async function generateSuggestions(
   language: string = 'en',
 ): Promise<Array<{ content: string }>> {
   const prompt = getPrompts(language);
+
   const suggestions = await generateObject({
     model: groq('llama-3.3-70b-versatile'),
     schema: z.object({
