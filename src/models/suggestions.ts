@@ -13,7 +13,7 @@ const SuggestionsSchema = new Schema<SuggestionsDocument>({
   gh_comment_id: { type: String, required: true, unique: true },
   suggestions: [{ content: { type: String, required: true } }],
   is_edited: { type: Boolean, required: true, default: false },
-  suggestion_selected_index: { type: Number, required: true, default: null },
+  suggestion_selected_index: { type: Number, required: false, default: null },
 });
 
 export const Suggestions = mongoose.model<SuggestionsDocument>(
