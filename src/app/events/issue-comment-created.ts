@@ -20,7 +20,7 @@ export const handleIssueComment = async (context: any) => {
   // Verifica a toxicidade do comentário
   const pespertiveResponse = await analyzeToxicity(comment.body.trim());
   console.log(
-    'pespertiveResponse',
+    'pespertiveResponse => ',
     JSON.stringify(pespertiveResponse, null, 2),
   );
 
@@ -30,7 +30,10 @@ export const handleIssueComment = async (context: any) => {
     comment.body.trim(),
     pespertiveResponse.language,
   );
-  console.log('classification', JSON.stringify(classification, null, 2));
+  console.log(
+    'Classification => ',
+    JSON.stringify(classification.incivility, null, 2),
+  );
 
   // Dados do comentário
   const commentData = {
@@ -56,7 +59,7 @@ export const handleIssueComment = async (context: any) => {
     toxicity_score: pespertiveResponse.toxicityScore,
     toxicity_analyzed_at: new Date(),
     flagged: pespertiveResponse.toxicityScore >= TOXICITY_THRESHOLD,
-    classification: classification.trim(),
+    classification: classification.incivility.trim(),
 
     // solução do comentário
     solutioned: false,
@@ -69,7 +72,7 @@ export const handleIssueComment = async (context: any) => {
   };
 
   const commentCreated = await Comment.create(commentData);
-  console.log('comment created', JSON.stringify(commentCreated, null, 2));
+  console.log('comment created => ', JSON.stringify(commentCreated, null, 2));
 
   if (pespertiveResponse.toxicityScore >= TOXICITY_THRESHOLD) {
     // Enviar notificação de moderação
@@ -80,7 +83,7 @@ export const handleIssueComment = async (context: any) => {
         comment_id: comment.id,
         content: 'eyes',
       });
-    console.log('notification', JSON.stringify(notification, null, 2));
+    console.log('notification => ', JSON.stringify(notification, null, 2));
 
     // Adiciona um comentário para notificar que a moderação foi feita
     const botComment = await context.octokit.issues.createComment({
@@ -89,14 +92,14 @@ export const handleIssueComment = async (context: any) => {
       issue_number: issue.number,
       body: `@${context.payload.sender.login} Hi there! We noticed some potentially concerning language in your recent comment. Would you mind reviewing our guidelines at https://github.com/apps/thepeacemakerbot? Let's work together to maintain a positive atmosphere.`,
     });
-    console.log('botComment', JSON.stringify(botComment, null, 2));
+    console.log('botComment => ', JSON.stringify(botComment, null, 2));
 
     // gera as sugestões de solução
     const suggestions = await generateSuggestions(
       comment.body.trim(),
       pespertiveResponse.language,
     );
-    console.log('suggestions', JSON.stringify(suggestions, null, 2));
+    console.log('suggestions => ', JSON.stringify(suggestions, null, 2));
 
     // Cria um documento com as sugestões
     const suggestionsData = {
@@ -110,7 +113,7 @@ export const handleIssueComment = async (context: any) => {
 
     const suggestionsCreated = await Suggestions.create(suggestionsData);
     console.log(
-      'suggestionsCreated',
+      'suggestionsCreated => ',
       JSON.stringify(suggestionsCreated, null, 2),
     );
   }
