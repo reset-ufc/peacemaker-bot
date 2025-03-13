@@ -105,7 +105,7 @@ export const handleIssueComment = async (context: any) => {
     const suggestionsData = {
       gh_comment_id: comment.id,
       suggestions: suggestions.map(suggestion => ({
-        content: suggestion.content,
+        content: suggestion.corrected_comment,
       })),
       is_edited: false,
       suggestion_selected_index: null,

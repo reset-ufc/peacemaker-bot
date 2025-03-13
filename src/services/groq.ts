@@ -31,13 +31,13 @@ export async function generateClassification(
 export async function generateSuggestions(
   content: string,
   language: string = 'en',
-): Promise<Array<{ content: string }>> {
+): Promise<Array<{ corrected_comment: string }>> {
   const prompt = getPrompts(language);
 
   const suggestions = await generateObject({
     model: groq('llama-3.3-70b-versatile'),
     schema: z.object({
-      suggestions: z.array(z.object({ content: z.string() })),
+      suggestions: z.array(z.object({ corrected_comment: z.string() })),
     }),
     system: prompt.recommendation,
     prompt: content.trim(),
