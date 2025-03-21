@@ -15,16 +15,22 @@ RUN apt-get update -qq && \
   rm -rf /var/lib/apt/lists/*
 COPY package.json pnpm-lock.yaml ./
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
+
+# Build stage
+FROM deps AS build
+WORKDIR /app
+COPY . .
+RUN pnpm run build
 
 # Production stage
-FROM base AS builder
+FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Copy dependencies from deps stage
+# Copy build output from build stage
+COPY --from=build /app/dist ./dist
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
 
 EXPOSE 4000
 

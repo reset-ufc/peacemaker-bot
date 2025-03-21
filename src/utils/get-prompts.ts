@@ -1,4 +1,4 @@
-import promptsJson from '../prompts/prompts.json';
+import promptsJson from '../../prompts/prompts.json';
 
 export function getPrompts(language: string = 'en'): {
   classification: string;

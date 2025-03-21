@@ -5,17 +5,19 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
+        - LOG_LEVEL=${LOG_LEVEL}
         - WEBHOOK_PROXY_URL=${WEBHOOK_PROXY_URL}
         - APP_ID=${APP_ID}
-        - PRIVATE_KEY=${PRIVATE_KEY}
         - WEBHOOK_SECRET=${WEBHOOK_SECRET}
+        - PRIVATE_KEY=${PRIVATE_KEY}
         - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
         - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
         - PERSPECTIVE_API_KEY=${PERSPECTIVE_API_KEY}
-        - DISCOVERY_URL="https://commentanalyzer.googleapis.com/$discovery/rest?version=v1alpha1"
+        - DISCOVERY_URL=${DISCOVERY_URL}
         - GROQ_API_KEY=${GROQ_API_KEY}
         - MONGODB_URI=${MONGODB_URI}
-        - MONGODB_DB=${MONGODB_DB}
+        - PORT=${PORT}
+
     env_file:
       - '.env'
     ports:

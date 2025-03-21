@@ -1,51 +1,39 @@
 {
-  "name": "thepeacemakerbot",
+  "name": "peacemaker-bot",
+  "description": "A bot to analyze Github comments and moderate them",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "A bot to analyze Github comments and moderate them",
-  "author": "Eric Mesquita <eric@gmail.com>",
-  "license": "MIT",
   "homepage": "https://github.com/reset-ufc/peacemaker-bot",
-  "keywords": [
-    "probot",
-    "github",
-    "probot-app"
-  ],
   "scripts": {
-    "start": "probot run ./index.js",
-    "dev": "tsup ./src --format cjs --no-splitting --clean && probot run ./dist/app/index.cjs",
+    "dev": "tsup ./src --format cjs --no-splitting --clean && probot run ./dist/index.cjs",
     "build": "tsup ./src --format cjs --no-splitting --clean",
+    "start": "probot run ./dist/index.cjs",
     "lint": "eslint .",
-    "format": "prettier --write src/**/*.js"
+    "format": "prettier --write src/**/*.ts"
   },
   "dependencies": {
-    "@ai-sdk/groq": "^1.1.12",
-    "ai": "^4.1.54",
-    "axios": "^1.6.8",
-    "dotenv": "^16.4.1",
-    "googleapis": "144.0.0",
-    "groq-sdk": "^0.12.0",
-    "mongodb": "^6.5.0",
+    "@ai-sdk/groq": "^1.1.14",
+    "ai": "^4.1.61",
+    "dotenv": "^16.4.7",
+    "googleapis": "^146.0.0",
     "mongoose": "^8.12.1",
-    "perspective-api-client": "^3.1.0",
-    "probot": "^13.4.1",
+    "probot": "^13.4.4",
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@eslint/js": "^9.18.0",
+    "@eslint/js": "^9.22.0",
+    "@trivago/prettier-plugin-sort-imports": "^5.2.2",
     "@types/node": "^22.13.9",
-    "eslint": "^9.18.0",
-    "globals": "^15.14.0",
-    "prettier": "^3.4.2",
-    "smee-client": "^2.0.4",
-    "ts-node": "^10.9.2",
+    "eslint": "^9.22.0",
+    "globals": "^16.0.0",
+    "prettier": "^3.5.3",
+    "smee-client": "^3.1.1",
     "tsup": "^8.4.0",
-    "tsx": "^4.19.3",
-    "typescript": "^5.8.2"
+    "typescript": "^5.3.3"
   },
   "engines": {
     "node": ">= 20"
   },
-  "packageManager": "pnpm@10.6.1+sha512.40ee09af407fa9fbb5fbfb8e1cb40fbb74c0af0c3e10e9224d7b53c7658528615b2c92450e74cfad91e3a2dcafe3ce4050d80bda71d757756d2ce2b66213e9a3"
+  "packageManager": "pnpm@10.5.2"
 }

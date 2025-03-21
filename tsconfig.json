@@ -1,26 +1,39 @@
 {
   "compilerOptions": {
-    // Base Options recommended for all projects
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "incremental": false,
     "target": "es2022",
     "allowJs": true,
+    "sourceMap": true,
     "resolveJsonModule": true,
     "moduleDetection": "force",
     "isolatedModules": true,
     "verbatimModuleSyntax": false,
-    // Enable strict type checking so you can catch bugs early
+    "lib": ["es2022"],
+
+    /* Strict Type-Checking Options */
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
-    // Transpile our TypeScript code to JavaScript
-    "module": "CommonJS",
-    "outDir": "dist",
-    // Emit type declarations
+    "module": "Node16",
+    "outDir": "./dist",
     "declaration": true,
-    "lib": ["es2022"]
+
+    /* Additional Checks */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+
+    "moduleResolution": "Node16",
+    "forceConsistentCasingInFileNames": true
   },
-  // Include the necessary files for your project
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "compileOnSave": false
 }

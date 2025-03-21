@@ -1,7 +1,8 @@
 import { createGroq } from '@ai-sdk/groq';
 import { generateObject } from 'ai';
 import { z } from 'zod';
-import { getPrompts } from '../utils/prompts';
+
+import { getPrompts } from '@/utils/get-prompts.js';
 
 const groq = createGroq({
   apiKey: process.env.GROQ_API_KEY!,
@@ -46,19 +47,3 @@ export async function generateSuggestions(
 
   return suggestions.object.suggestions;
 }
-
-// async function main() {
-//   const classification = await generateClassification(
-//     "@1M0RR1V3L fuck you this bot don't run, any way bro, make the L!!! (again) Fuck our code",
-//   );
-
-//   const suggestions = await generateSuggestions(
-//     "@1M0RR1V3L fuck you this bot don't run, any way bro, make the L!!! (again) Fuck our code",
-//   );
-
-//   console.log('classification:', JSON.stringify(classification, null, 2));
-
-//   console.log('suggestions:', JSON.stringify(suggestions, null, 2));
-// }
-
-// main();
