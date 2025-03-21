@@ -1,6 +1,6 @@
 # syntax = docker/dockerfile:1
 
-ARG NODE_VERSION=20.18.1
+ARG NODE_VERSION=20.19.0
 
 # Base stage with shared configurations
 FROM node:${NODE_VERSION}-slim AS base
@@ -15,13 +15,13 @@ RUN apt-get update -qq && \
   rm -rf /var/lib/apt/lists/*
 COPY package.json pnpm-lock.yaml ./
 
-RUN pnpm install
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 # Build stage
 FROM deps AS build
 WORKDIR /app
 COPY . .
-RUN pnpm run build
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm run build
 
 # Production stage
 FROM base AS runner
@@ -30,8 +30,9 @@ ENV NODE_ENV=production
 
 # Copy build output from build stage
 COPY --from=build /app/dist ./dist
+COPY --from=build /app/package.json ./package.json
 COPY --from=deps /app/node_modules ./node_modules
 
 EXPOSE 4000
 
-CMD ["pnpm", "run", "start"]
+CMD ["pnpm", "exec", "probot", "run", "./dist/index.cjs"]
