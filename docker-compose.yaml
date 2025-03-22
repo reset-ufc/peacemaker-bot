@@ -1,6 +1,5 @@
 services:
-  bot:
-    container_name: peacemaker-bot
+  peacemaker-bot:
     build:
       context: .
       dockerfile: Dockerfile
@@ -12,8 +11,7 @@ services:
         - PRIVATE_KEY=${PRIVATE_KEY}
         - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
         - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
-        - PERSPECTIVE_API_KEY="https://commentanalyzer.googleapis.com/$discovery/rest?version=v1alpha1"
-        - DISCOVERY_URL=${DISCOVERY_URL}
+        - PERSPECTIVE_API_KEY=${PERSPECTIVE_API_KEY}
         - GROQ_API_KEY=${GROQ_API_KEY}
         - MONGODB_URI=${MONGODB_URI}
         - PORT=${PORT}
@@ -22,3 +20,7 @@ services:
       - '.env'
     ports:
       - '4000:4000'
+
+networks:
+  peacemaker-net:
+    driver: bridge

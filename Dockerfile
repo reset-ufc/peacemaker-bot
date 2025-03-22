@@ -26,12 +26,40 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm run build
 # Production stage
 FROM base AS runner
 WORKDIR /app
-ENV NODE_ENV=production
+
+
+ARG LOG_LEVEL
+ARG WEBHOOK_PROXY_URL
+ARG APP_ID
+ARG WEBHOOK_SECRET
+ARG PRIVATE_KEY
+ARG GITHUB_CLIENT_ID
+ARG GITHUB_CLIENT_SECRET
+ARG PERSPECTIVE_API_KEY
+ARG GROQ_API_KEY
+ARG MONGODB_URI
+ARG PORT
+
+ENV NODE_ENV=production \
+  LOG_LEVEL=${LOG_LEVEL} \
+  WEBHOOK_PROXY_URL=${WEBHOOK_PROXY_URL} \
+  APP_ID=${APP_ID} \
+  WEBHOOK_SECRET=${WEBHOOK_SECRET} \
+  PRIVATE_KEY=${PRIVATE_KEY} \
+  GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID} \
+  GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET} \
+  PERSPECTIVE_API_KEY=${PERSPECTIVE_API_KEY} \
+  GROQ_API_KEY=${GROQ_API_KEY} \
+  MONGODB_URI=${MONGODB_URI} \
+  PORT=${PORT}
+
 
 # Copy build output from build stage
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/package.json ./package.json
-COPY --from=deps /app/node_modules ./node_modules
+COPY --from=build /app/pnpm-lock.yaml ./pnpm-lock.yaml
+
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --loglevel debug --production
 
 EXPOSE 4000
 

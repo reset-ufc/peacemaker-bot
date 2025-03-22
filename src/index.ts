@@ -4,7 +4,9 @@ import { handleComment } from './event/comment.js';
 import { setupDatabase } from './services/database.js';
 
 export default async function initializeApp(app: Probot) {
-  setupDatabase();
+  setupDatabase().then(() => {
+    app.log.info('mongodb connected');
+  });
 
   app.on('issue_comment.created', handleComment);
   app.on('pull_request_review_comment.created', handleComment);
