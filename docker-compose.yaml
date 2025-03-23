@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        - LOG_LEVEL=${LOG_LEVEL}
+        - LOG_LEVEL=${LOG_LEVEL:-debug}
         - WEBHOOK_PROXY_URL=${WEBHOOK_PROXY_URL}
         - APP_ID=${APP_ID}
         - WEBHOOK_SECRET=${WEBHOOK_SECRET}
@@ -14,13 +14,9 @@ services:
         - PERSPECTIVE_API_KEY=${PERSPECTIVE_API_KEY}
         - GROQ_API_KEY=${GROQ_API_KEY}
         - MONGODB_URI=${MONGODB_URI}
-        - PORT=${PORT}
+        - PORT=${PORT:-4000}
 
     env_file:
       - '.env'
     ports:
       - '4000:4000'
-
-networks:
-  peacemaker-net:
-    driver: bridge
