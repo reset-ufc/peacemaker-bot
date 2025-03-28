@@ -8,5 +8,14 @@
   "semi": true,
   "useTabs": false,
   "endOfLine": "lf",
-  "printWidth": 80
+  "printWidth": 80,
+  "importOrder": [
+    "^(react|next?/?([a-zA-Z/]*))$",
+    "<THIRD_PARTY_MODULES>",
+    "^@/(.*)$",
+    "^[./]"
+  ],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true,
+  "plugins": ["@trivago/prettier-plugin-sort-imports"]
 }
