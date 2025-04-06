@@ -120,6 +120,7 @@ export async function handleComment(context: any) {
         gh_comment_id: comment.id,
         content: suggestion.corrected_comment,
         is_edited: false,
+        is_rejected: false,
         created_at: new Date(),
       });
       console.log(

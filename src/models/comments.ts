@@ -19,7 +19,7 @@ export interface CommentsDocument extends Document {
 }
 
 const CommentsSchema = new Schema<CommentsDocument>({
-  gh_comment_id: { type: String, required: true, unique: true },
+  gh_comment_id: { type: String, required: true },
   gh_repository_id: { type: String, required: true },
   gh_repository_name: { type: String, required: true },
   gh_repository_owner: { type: String, required: true },
