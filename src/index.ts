@@ -8,8 +8,8 @@ export default async function initializeApp(app: Probot) {
     app.log.info('mongodb connected');
   });
 
-  app.on('issue_comment.created', handleComment);
-  app.on('pull_request_review_comment.created', handleComment);
+  app.on(['issue_comment.created', 'issue_comment.edited'], handleComment);
+  app.on(['pull_request_review_comment.created', 'pull_request_review_comment.edited'], handleComment);
 
   app.log.info('Peacemaker bot started!');
 

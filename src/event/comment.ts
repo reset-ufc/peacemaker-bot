@@ -71,6 +71,63 @@ export async function handleComment(context: any) {
     gh_parent_id: issue.id,
   });
 
+  if (action === 'edited') {
+    const { data: perspectiveResponse } = await analyzeToxicity(comment.body.trim());
+    const currentToxicity = perspectiveResponse.attributeScores.TOXICITY.summaryScore.value;
+    context.log.info(`Reanalysis: toxicity = ${currentToxicity}`);
+
+    if (currentToxicity < TOXICITY_THRESHOLD) {
+      context.log.info('Comment is no longer incivilized. Removing bot moderation comment.');
+
+      const commentRecord = await Comments.findOne({ gh_comment_id: comment.id });
+      console.log(commentRecord);
+      if (commentRecord && commentRecord.bot_comment_id) {
+        try {
+          await context.octokit.issues.deleteComment({
+            owner: repository.owner.login,
+            repo: repository.name,
+            comment_id: commentRecord.bot_comment_id,
+          });
+          context.log.info('Bot moderation comment removed.');
+          await Comments.findOneAndUpdate(
+            { gh_comment_id: comment.id },
+            { solutioned: false, suggestion_id: null, bot_comment_id: null }
+          );
+        } catch (err) {
+          context.log.error('Error removing bot comment:', err);
+        }
+      } else {
+        context.log.info('No bot comment ID found. Skipping deletion.');
+      }
+    } else {
+      context.log.info('Comment is still incivilized. Regenerating suggestions.');
+
+      const classification = await generateClassification(
+        comment.body.trim(),
+        perspectiveResponse.languages[0]
+      );
+      context.log.info('New classification:', classification.incivility);
+
+      const suggestions = await generateSuggestions(
+        comment.body.trim(),
+        perspectiveResponse.languages[0]
+      );
+      context.log.info('New suggestions:', suggestions);
+
+      await Suggestions.deleteMany({ gh_comment_id: comment.id });
+      suggestions.map(async suggestion => {
+        const suggestionCreated = await Suggestions.create({
+          gh_comment_id: comment.id,
+          content: suggestion.corrected_comment,
+          is_edited: false,
+          is_rejected: false,
+          created_at: new Date(),
+        });
+        context.log.info('Suggestion created:', suggestionCreated.id);
+      });
+    }
+    return;
+  }
   if (!parent) {
     const parentCreated = await Parents.create({
       comment_id: comment.id,
@@ -107,6 +164,11 @@ export async function handleComment(context: any) {
       body: `@${sender.login} Hi there!\n\nnoticed some potentially concerning language in your recent comment.\n Would you mind reviewing our guidelines at https://github.com/apps/thepeacemakerbot?\n\nLet's work together to maintain a positive atmosphere.\n`,
     });
     console.log('botComment => ', JSON.stringify(botComment.data, null, 2));
+
+    await Comments.findOneAndUpdate(
+      { gh_comment_id: comment.id },
+      { bot_comment_id: botComment.data.id }
+    );
 
     // gera as sugestões de solução
     const suggestions = await generateSuggestions(
