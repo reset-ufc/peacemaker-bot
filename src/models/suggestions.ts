@@ -4,6 +4,7 @@ export interface SuggestionsDocument extends Document {
   gh_comment_id: string;
   content: string;
   is_edited: boolean;
+  is_rejected: boolean;
   created_at: Date;
 }
 
