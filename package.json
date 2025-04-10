@@ -10,7 +10,7 @@
     "build": "tsup ./src --format cjs --no-splitting --clean",
     "start": "probot run ./dist/index.cjs",
     "lint": "eslint .",
-    "format": "prettier --write src/**/*.ts"
+    "format": "prettier \"**/*.{js,mjs,ts,md,json,yml}\" --check --cache --cache-strategy=content --cache-location=.prettiercache --write"
   },
   "dependencies": {
     "@ai-sdk/groq": "^1.1.14",

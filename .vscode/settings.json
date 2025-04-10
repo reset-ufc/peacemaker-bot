@@ -2,11 +2,11 @@
   "editor.tabSize": 2,
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "javascript.updateImportsOnFileMove.enabled": "always",
+  "typescript.updateImportsOnFileMove.enabled": "always",
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit",
-    "source.fixAll.ts": "explicit",
     "source.organizeImports": "explicit",
-    "source.removeUnusedImports": "always"
+    "source.fixAll.eslint": "explicit"
   },
 
   "typescript.tsdk": "node_modules/typescript/lib"
