@@ -2,12 +2,12 @@
 
 ## :technologist: Membros da equipe e Orientador
 
--   538897 - Antonio Lucas Melo de Sousa.
--   539355 - José Eric Mesquita Coelho.
--   540910 - Matheus Feitosa de Oliveira Rabelo.
--   XXXXXX - Carlos Jefté Bastos de Mesquita Freire.
--   XXXXXX - Emanuel Ávila Cruz Pires.
--   XXXXXX - Anderson Gonçalves Uchôa.
+- 538897 - Antonio Lucas Melo de Sousa.
+- 539355 - José Eric Mesquita Coelho.
+- 540910 - Matheus Feitosa de Oliveira Rabelo.
+- XXXXXX - Carlos Jefté Bastos de Mesquita Freire.
+- XXXXXX - Emanuel Ávila Cruz Pires.
+- XXXXXX - Anderson Gonçalves Uchôa.
 
 ## :people_holding_hands: Papéis ou tipos de usuário da aplicação
 
@@ -19,24 +19,24 @@
 
 Liste as principais entidades do sistema.
 
--   Usuário
-    -   Contribuidor
-    -   Admin de Repositório
--   Comentários
--   Repositorios
+- Usuário
+  - Contribuidor
+  - Admin de Repositório
+- Comentários
+- Repositorios
 
 ## :triangular_flag_on_post: Principais funcionalidades da aplicação por usuário
 
 > Contribuidor:
 
--   Login Social com GitHub
--   Visualizar Notificações de Comentários Incívilizados feitos por ele
--   Corrigir ou contestar a notificação do Comentário Incívilizado
+- Login Social com GitHub
+- Visualizar Notificações de Comentários Incívilizados feitos por ele
+- Corrigir ou contestar a notificação do Comentário Incívilizado
 
 > Admin (Uma extensão do Contribuidor, com mais privilégios):
 
--   Acesso ao dashboard de repositórios no qual é admin
--   Visualização de estatíscas de tipos de incivilidades
+- Acesso ao dashboard de repositórios no qual é admin
+- Visualização de estatíscas de tipos de incivilidades
 
 ---
 
@@ -52,9 +52,9 @@ Tanto o Dashboard quanto as recomendações estão localizados no site do bot, o
 
 ### Objetivos do Sistema
 
--   **Monitorar índices de incivilidade/toxicidade de repositórios de código e comunidades de software**: Identificar e avaliar o nível de civilidade nos comentários feitos em issues e pull requests.
--   **Notificar contribuidores sobre comentários incivilizados e sugerir correções**: Alertar os desenvolvedores sobre comentários que possam ser considerados incivilizados e sugerir melhorias.
--   **Fornecer a administradores de repositórios indicadores de civilidade da comunidade e do projeto (project health)**: Proporcionar uma visão clara da civilidade nas interações dentro do repositório, permitindo que os gerentes de projeto acompanhem e tomem decisões informadas.
+- **Monitorar índices de incivilidade/toxicidade de repositórios de código e comunidades de software**: Identificar e avaliar o nível de civilidade nos comentários feitos em issues e pull requests.
+- **Notificar contribuidores sobre comentários incivilizados e sugerir correções**: Alertar os desenvolvedores sobre comentários que possam ser considerados incivilizados e sugerir melhorias.
+- **Fornecer a administradores de repositórios indicadores de civilidade da comunidade e do projeto (project health)**: Proporcionar uma visão clara da civilidade nas interações dentro do repositório, permitindo que os gerentes de projeto acompanhem e tomem decisões informadas.
 
 ### A Necessidade
 
@@ -70,10 +70,10 @@ O impacto da solução é significativo, pois automatiza a moderação de coment
 
 ### Benefícios da Solução
 
--   **Ambiente mais saudável e civilizado em Pull Requests e Issues**: Redução da toxicidade nos comentários, promovendo uma cultura de respeito e colaboração.
--   **Maior controle pelo líder da equipe**: Os administradores podem monitorar e gerenciar a saúde do ambiente de trabalho de forma mais eficaz.
--   **Correção de comentários tóxicos ou incivilizados**: Os desenvolvedores têm a oportunidade de melhorar a qualidade de seus comentários, com sugestões claras e não intrusivas.
--   **Dashboard para visualização de dados**: Uma interface intuitiva que permite aos administradores acompanhar as estatísticas de incivilidade e tomar decisões informadas para melhorar a saúde do projeto.
+- **Ambiente mais saudável e civilizado em Pull Requests e Issues**: Redução da toxicidade nos comentários, promovendo uma cultura de respeito e colaboração.
+- **Maior controle pelo líder da equipe**: Os administradores podem monitorar e gerenciar a saúde do ambiente de trabalho de forma mais eficaz.
+- **Correção de comentários tóxicos ou incivilizados**: Os desenvolvedores têm a oportunidade de melhorar a qualidade de seus comentários, com sugestões claras e não intrusivas.
+- **Dashboard para visualização de dados**: Uma interface intuitiva que permite aos administradores acompanhar as estatísticas de incivilidade e tomar decisões informadas para melhorar a saúde do projeto.
 
 ---
 
@@ -87,71 +87,71 @@ O sistema faz a análise de comentários no GitHub, identificando comportamentos
 
 ### Definições, Acrônimos e Abreviações
 
--   **Contribuidor**: Usuário que comenta em repositórios no GitHub.
--   **Admin de Repositório**: Administrador de um repositório no GitHub com acesso ao dashboard do Peacemaker Bot.
--   **Incivilidade**: Comentários que são considerados inapropriados, ofensivos ou tóxicos.
+- **Contribuidor**: Usuário que comenta em repositórios no GitHub.
+- **Admin de Repositório**: Administrador de um repositório no GitHub com acesso ao dashboard do Peacemaker Bot.
+- **Incivilidade**: Comentários que são considerados inapropriados, ofensivos ou tóxicos.
 
 ### Requisitos Funcionais
 
 #### Requisito Funcional 1: Instalação do GithubApp via Marketplace do GitHub
 
--   **Descrição**: Permitir que os usuários façam a instalação do ThePeacemakerBot(GithubApp) via Marketplace do GitHub.
--   **Critérios de Aceitação**: O GithubApp deve estar disponível no Marketplace do GitHub e sua instalação deve ser possível em qualquer repositório que o usuário tenha permissão de administrador.
--   **Regras de Negócio**: Somente usuários com permissão de administrador em um repositório podem instalar o GithubApp (Este requisito já é de certa forma aplicado pelo próprio GithubApp).
+- **Descrição**: Permitir que os usuários façam a instalação do ThePeacemakerBot(GithubApp) via Marketplace do GitHub.
+- **Critérios de Aceitação**: O GithubApp deve estar disponível no Marketplace do GitHub e sua instalação deve ser possível em qualquer repositório que o usuário tenha permissão de administrador.
+- **Regras de Negócio**: Somente usuários com permissão de administrador em um repositório podem instalar o GithubApp (Este requisito já é de certa forma aplicado pelo próprio GithubApp).
 
 #### Requisito Funcional 2: Login Social com GitHub
 
--   **Descrição**: Permitir que os usuários façam login no sistema usando sua conta do GitHub.
--   **Critérios de Aceitação**: O sistema deve autenticar os usuários com sucesso utilizando OAuth ou GithubApp Auth com GitHub.
--   **Regras de Negócio**: Somente usuários autenticados podem acessar o dashboard ou receber notificações.
+- **Descrição**: Permitir que os usuários façam login no sistema usando sua conta do GitHub.
+- **Critérios de Aceitação**: O sistema deve autenticar os usuários com sucesso utilizando OAuth ou GithubApp Auth com GitHub.
+- **Regras de Negócio**: Somente usuários autenticados podem acessar o dashboard ou receber notificações.
 
 #### Requisito Funcional 3: Análise de Comentários
 
--   **Descrição**: Analisar automaticamente os comentários feitos em issues e pull requests para identificar incivilidade.
--   **Critérios de Aceitação**: O sistema deve ser capaz de classificar um comentário como incivilizado salvando sua classificação em um banco de dados.
--   **Regras de Negócio**: Apenas comentários que ultrapassem uma classificação mínima de 50% de incivilidade devem gerar notificações para os usuários. Apenas comentários de repositórios com o GithubApp instalado conseguem ser analisados.
+- **Descrição**: Analisar automaticamente os comentários feitos em issues e pull requests para identificar incivilidade.
+- **Critérios de Aceitação**: O sistema deve ser capaz de classificar um comentário como incivilizado salvando sua classificação em um banco de dados.
+- **Regras de Negócio**: Apenas comentários que ultrapassem uma classificação mínima de 50% de incivilidade devem gerar notificações para os usuários. Apenas comentários de repositórios com o GithubApp instalado conseguem ser analisados.
 
 #### Requisito Funcional 4: Notificações de Comentários Incivilizados
 
--   **Descrição**: Notificar os usuários sobre comentários que foram detectados como incivilizados, com a opção de corrigir ou contestar a notificação.
--   **Critérios de Aceitação**: O sistema deve notificar o usuário através de um dos seguintes canais (podendo ser mais de um): e-mail, interface web ou notificação push (PC ou mobile).
--   **Regras de Negócio**: O usuário deve ter a opção de corrigir a Incivilidade ou contestar/desncosiderar a notificação, essa opção deve ser exibida junto da mensagem de notificação.
+- **Descrição**: Notificar os usuários sobre comentários que foram detectados como incivilizados, com a opção de corrigir ou contestar a notificação.
+- **Critérios de Aceitação**: O sistema deve notificar o usuário através de um dos seguintes canais (podendo ser mais de um): e-mail, interface web ou notificação push (PC ou mobile).
+- **Regras de Negócio**: O usuário deve ter a opção de corrigir a Incivilidade ou contestar/desncosiderar a notificação, essa opção deve ser exibida junto da mensagem de notificação.
 
 #### Requisito Funcional 5: Dashboard de Estatísticas de Incivilidade
 
--   **Descrição**: Fornecer aos administradores um dashboard onde possam visualizar estatísticas de incivilidade nos repositórios que administram.
--   **Critérios de Aceitação**: O dashboard deve exibir tanto gráficos e registros abstraídos quanto detalhados sobre a incidência de incivilidade.
--   **Regras de Negócio**: Apenas repositórios com o GithubApp instalado podem ter dados analisados e exibidos no dashboard e apenas usuários com privilégios de administrador no repositório devem ter acesso ao dashboard.
+- **Descrição**: Fornecer aos administradores um dashboard onde possam visualizar estatísticas de incivilidade nos repositórios que administram.
+- **Critérios de Aceitação**: O dashboard deve exibir tanto gráficos e registros abstraídos quanto detalhados sobre a incidência de incivilidade.
+- **Regras de Negócio**: Apenas repositórios com o GithubApp instalado podem ter dados analisados e exibidos no dashboard e apenas usuários com privilégios de administrador no repositório devem ter acesso ao dashboard.
 
 ### Requisitos Não Funcionais
 
 #### Desempenho
 
--   O sistema deve processar e classificar os comentários em no máximo 1 minuto após serem postados.
--   O dashboard deve carregar em menos de 30 segundos com até 1000 registros de comentários.
+- O sistema deve processar e classificar os comentários em no máximo 1 minuto após serem postados.
+- O dashboard deve carregar em menos de 30 segundos com até 1000 registros de comentários.
 
 #### Segurança
 
--   O sistema deve garantir que todos os dados de autenticação sejam transmitidos de forma segura usando HTTPS.
--   Os dados sensíveis, como tokens de acesso, devem ser armazenados utilizando criptografia.
+- O sistema deve garantir que todos os dados de autenticação sejam transmitidos de forma segura usando HTTPS.
+- Os dados sensíveis, como tokens de acesso, devem ser armazenados utilizando criptografia.
 
 #### Usabilidade
 
--   A interface do usuário deve ser intuitiva, com navegação clara e fácil acesso às funcionalidades principais.
+- A interface do usuário deve ser intuitiva, com navegação clara e fácil acesso às funcionalidades principais.
 
 #### Confiabilidade
 
--   O sistema deve ter uma disponibilidade de 99,9%.
--   Os dados de comentários e análises devem ser persistidos de forma a evitar perda em caso de falha do sistema.
+- O sistema deve ter uma disponibilidade de 99,9%.
+- Os dados de comentários e análises devem ser persistidos de forma a evitar perda em caso de falha do sistema.
 
 #### Manutenibilidade
 
--   O sistema deve ser modular, permitindo atualizações e substituições de componentes sem impacto no sistema como um todo.
+- O sistema deve ser modular, permitindo atualizações e substituições de componentes sem impacto no sistema como um todo.
 
 #### Portabilidade
 
--   O sistema deve ser executável em diferentes ambientes de nuvem (AWS, Azure, Google Cloud).
--   O sistema deve multiplataforma, utilizando as práticas recomendadas para garantir a compatibilidade com diferentes plataformas (Web e Mobile) e navegadores diferentes.
+- O sistema deve ser executável em diferentes ambientes de nuvem (AWS, Azure, Google Cloud).
+- O sistema deve multiplataforma, utilizando as práticas recomendadas para garantir a compatibilidade com diferentes plataformas (Web e Mobile) e navegadores diferentes.
 
 ---
 
@@ -159,22 +159,22 @@ O sistema faz a análise de comentários no GitHub, identificando comportamentos
 
 **Frontend:**
 
--   React
--   Tailwindcss
--   Next.js
+- React
+- Tailwindcss
+- Next.js
 
 **Backend:**
 
--   MongoDB e Mongoose
--   Fastify
--   Node.js
+- MongoDB e Mongoose
+- Fastify
+- Node.js
 
 **GitHub App:**
 
--   Probot
--   GitHub API
--   Octokit
--   Node.js
+- Probot
+- GitHub API
+- Octokit
+- Node.js
 
 ## :shipit: Operações implementadas para cada entidade da aplicação
 
@@ -207,16 +207,16 @@ O sistema faz a análise de comentários no GitHub, identificando comportamentos
 
 ## Documentação e Anexos
 
--   [Documento de visão do projeto](https://docs.google.com/document/d/198r8KQUQ68oPoADd7dPa0y0c1vGzDT9p/edit?usp=sharing&ouid=105636334481493340185&rtpof=true&sd=true)
--   [Rotas de API detalhadas](https://docs.google.com/document/d/1D2EbKLtLXlEqnuOkQhv_AIOQJUqwo0KYdYJHh9FEevE/edit?usp=drive_link)
+- [Documento de visão do projeto](https://docs.google.com/document/d/198r8KQUQ68oPoADd7dPa0y0c1vGzDT9p/edit?usp=sharing&ouid=105636334481493340185&rtpof=true&sd=true)
+- [Rotas de API detalhadas](https://docs.google.com/document/d/1D2EbKLtLXlEqnuOkQhv_AIOQJUqwo0KYdYJHh9FEevE/edit?usp=drive_link)
 
 ### Referências
 
--   [GitHub API Documentation](https://docs.github.com/en/rest)
--   [Next.js Documentation](https://nextjs.org/docs)
--   [MongoDB Documentation](https://docs.mongodb.com/)
--   [Fastify Documentation](https://fastify.dev/docs/latest/)
--   [Probot Documentation](https://probot.github.io/docs/)
+- [GitHub API Documentation](https://docs.github.com/en/rest)
+- [Next.js Documentation](https://nextjs.org/docs)
+- [MongoDB Documentation](https://docs.mongodb.com/)
+- [Fastify Documentation](https://fastify.dev/docs/latest/)
+- [Probot Documentation](https://probot.github.io/docs/)
 
 ## License
 
