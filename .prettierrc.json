@@ -1,5 +1,9 @@
 {
+  "$schema": "https://json.schemastore.org/prettierrc",
   "singleQuote": true,
+  "quoteProps": "as-needed",
+  "objectWrap": "preserve",
+  "singleAttributePerLine": false,
   "trailingComma": "all",
   "tabWidth": 2,
   "arrowParens": "avoid",
@@ -9,13 +13,13 @@
   "useTabs": false,
   "endOfLine": "lf",
   "printWidth": 80,
+  "plugins": ["@trivago/prettier-plugin-sort-imports"],
   "importOrder": [
-    "^(react|next?/?([a-zA-Z/]*))$",
+    "^(probot?/?([a-zA-Z/]*))$",
     "<THIRD_PARTY_MODULES>",
     "^@/(.*)$",
     "^[./]"
   ],
   "importOrderSeparation": true,
-  "importOrderSortSpecifiers": true,
-  "plugins": ["@trivago/prettier-plugin-sort-imports"]
+  "importOrderSortSpecifiers": true
 }

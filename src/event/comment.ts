@@ -16,11 +16,10 @@ export async function handleComment(context: any) {
   const { user: author } = comment;
 
   if (author.type === 'Bot') {
-    console.log('Skipping bot comment');
+    context.log.info('Skipping bot comment');
     return;
   }
 
-  // Verifica a toxicidade do comentário
   const { data: perspectiveResponse } = await analyzeToxicity(comment.body.trim());
   console.log(
     'perspectiveResponse => ',
@@ -39,13 +38,11 @@ export async function handleComment(context: any) {
     comment.body.trim(),
     perspectiveResponse.languages[0],
   );
-  console.log(
+  context.log.info(
     'Classification => ',
     JSON.stringify(classification.incivility, null, 2),
   );
 
-  // Se o comentário já existir (baseado no gh_comment_id) e a ação for 'edited', atualize-o;
-  // caso contrário, crie-o
   let commentRecord;
   if (action === 'edited') {
     commentRecord = await Comments.findOneAndUpdate(
@@ -54,7 +51,7 @@ export async function handleComment(context: any) {
         content: comment.body,
         toxicity_score: perspectiveResponse.attributeScores.TOXICITY.summaryScore.value,
         classification: classification.incivility,
-        // Atualize outros campos que desejar (p.ex.: event_type, created_at se aplicável)
+        created_at: Date.now()
       },
       { new: true }
     );
@@ -79,10 +76,8 @@ export async function handleComment(context: any) {
     console.log('Created comment record => ', commentRecord.id);
   }
 
-  // Verifica se já existe um Parent para esse Issue
   const parent = await Parents.findOne({ gh_parent_id: issue.id });
   if (!parent && action !== 'edited') {
-    // Somente criar parent se for criação, não na edição
     const parentCreated = await Parents.create({
       comment_id: comment.id,
       gh_parent_id: issue.id,
@@ -96,9 +91,7 @@ export async function handleComment(context: any) {
     console.log('Parent created => ', parentCreated.id);
   }
 
-  // Fluxo para tratamento de toxicidade
   if (action === 'edited') {
-    // Processamento específico para edição
     context.log.info('Processing edited comment...');
     const { data: newPerspectiveResponse } = await analyzeToxicity(comment.body.trim());
     const currentToxicity = newPerspectiveResponse.attributeScores.TOXICITY.summaryScore.value;
@@ -106,7 +99,6 @@ export async function handleComment(context: any) {
 
     if (currentToxicity < TOXICITY_THRESHOLD) {
       context.log.info('Comment is no longer incivilized. Removing bot moderation comment.');
-      // Procura o registro atualizado para verificar bot_comment_id
       if (commentRecord && commentRecord.bot_comment_id) {
         try {
           await context.octokit.issues.deleteComment({
@@ -115,9 +107,10 @@ export async function handleComment(context: any) {
             comment_id: commentRecord.bot_comment_id,
           });
           context.log.info('Bot moderation comment removed.');
+
           await Comments.findOneAndUpdate(
             { gh_comment_id: comment.id },
-            { solutioned: false, suggestion_id: null, bot_comment_id: null }
+            { solutioned: false, suggestion_id: null, bot_comment_id: null },
           );
         } catch (err) {
           context.log.error('Error removing bot comment:', err);
@@ -139,7 +132,6 @@ export async function handleComment(context: any) {
       );
       context.log.info('New suggestions:', suggestions);
 
-      // Remove as sugestões anteriores e cria as novas
       await Suggestions.deleteMany({ gh_comment_id: comment.id });
       suggestions.map(async suggestion => {
         const suggestionCreated = await Suggestions.create({
@@ -152,14 +144,12 @@ export async function handleComment(context: any) {
         context.log.info('Suggestion created:', suggestionCreated.id);
       });
     }
-    return; // Encerra o fluxo para edição
+    return; 
   }
 
-  // Fluxo para comentários criados
   if (
     perspectiveResponse.attributeScores.TOXICITY.summaryScore.value >= TOXICITY_THRESHOLD
   ) {
-    // Verifica se já existe um comentário de moderação para evitar duplicação
     const existingModeration = await Comments.findOne({
       gh_comment_id: comment.id,
       bot_comment_id: { $ne: null },
@@ -167,7 +157,6 @@ export async function handleComment(context: any) {
     if (existingModeration) {
       context.log.info('Bot moderation comment already exists. Skipping creation.');
     } else {
-      // Envia notificação de moderação (reação)
       const { data: notification } = await context.octokit.reactions.createForIssueComment({
         owner: repository.owner.login,
         repo: repository.name,
@@ -176,7 +165,6 @@ export async function handleComment(context: any) {
       });
       context.log.info('Notified moderation', notification);
 
-      // Cria o comentário de moderação do bot
       const botComment = await context.octokit.issues.createComment({
         owner: repository.owner.login,
         repo: repository.name,
@@ -185,7 +173,6 @@ export async function handleComment(context: any) {
       });
       console.log('botComment => ', JSON.stringify(botComment.data, null, 2));
 
-      // Atualiza o registro com o bot_comment_id
       await Comments.findOneAndUpdate(
         { gh_comment_id: comment.id },
         { bot_comment_id: botComment.data.id }

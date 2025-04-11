@@ -243,7 +243,6 @@ export const commentSchema = z.object({
   issue_url: z.string(),
   id: z.number(),
   node_id: z.string(),
-  solutioned: z.boolean(),
   user: userSchema,
   created_at: z.string(),
   updated_at: z.string(),
