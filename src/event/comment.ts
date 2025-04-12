@@ -144,7 +144,7 @@ export async function handleComment(context: any) {
         context.log.info('Suggestion created:', suggestionCreated.id);
       });
     }
-    return; 
+    return;
   }
 
   if (
