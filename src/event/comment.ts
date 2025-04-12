@@ -37,6 +37,7 @@ export async function handleComment(context: any) {
   const classification = await generateClassification(
     comment.body.trim(),
     perspectiveResponse.languages[0],
+    // Add endpoint to select model from enum at models.ts
   );
   context.log.info(
     'Classification => ',
