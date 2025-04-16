@@ -60,3 +60,7 @@ export const maxCompletionTokensMap: Partial<Record<Model, number>> = {
   [Model.LLAMA_3_3_70B_VERSATILE]: 32_768,
   [Model.LLAMA_3_1_8B_INSTANT]: 8_192,
 }
+
+export const getModelEnum = (value: string): Model | undefined => {
+  return Object.values(Model).includes(value as Model) ? (value as Model) : undefined;
+};

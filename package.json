@@ -15,6 +15,7 @@
   "dependencies": {
     "@ai-sdk/groq": "^1.1.14",
     "ai": "^4.1.61",
+    "axios": "^1.8.4",
     "dotenv": "^16.4.7",
     "googleapis": "^146.0.0",
     "mongoose": "^8.12.1",

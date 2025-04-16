@@ -1,12 +1,15 @@
+import { Model, getModelEnum } from '@/enums/models.js';
 import { Comments } from '@/models/comments.js';
 import { CommentType, Parents } from '@/models/parent.js';
 import { Suggestions } from '@/models/suggestions.js';
 import { ProbotEvent } from '@/schemas/event.js';
+import { UserModel } from '@/services/database.js';
 import { analyzeToxicity } from '@/services/google-perspective.js';
 import {
   generateClassification,
   generateSuggestions,
 } from '@/services/groq.js';
+
 
 export async function handleComment(context: any) {
   const TOXICITY_THRESHOLD = 0.6;
@@ -19,6 +22,8 @@ export async function handleComment(context: any) {
     context.log.info('Skipping bot comment');
     return;
   }
+
+  const user = await UserModel.findOne({ gh_user_id: String(author.id) });
 
   const { data: perspectiveResponse } = await analyzeToxicity(comment.body.trim());
   console.log(
@@ -37,7 +42,7 @@ export async function handleComment(context: any) {
   const classification = await generateClassification(
     comment.body.trim(),
     perspectiveResponse.languages[0],
-    // Add endpoint to select model from enum at models.ts
+    getModelEnum(user!!.llm_id) || Model.LLAMA_3_3_70B_VERSATILE
   );
   context.log.info(
     'Classification => ',
@@ -129,7 +134,8 @@ export async function handleComment(context: any) {
 
       const suggestions = await generateSuggestions(
         comment.body.trim(),
-        newPerspectiveResponse.languages[0]
+        newPerspectiveResponse.languages[0],
+        getModelEnum(user!!.llm_id) || Model.LLAMA_3_3_70B_VERSATILE
       );
       context.log.info('New suggestions:', suggestions);
 
@@ -182,7 +188,8 @@ export async function handleComment(context: any) {
       // Gera as sugestões de correção
       const suggestions = await generateSuggestions(
         comment.body.trim(),
-        perspectiveResponse.languages[0]
+        perspectiveResponse.languages[0],
+        getModelEnum(user!!.llm_id) || Model.LLAMA_3_3_70B_VERSATILE
       );
       console.log('suggestions => ', JSON.stringify(suggestions, null, 2));
 
