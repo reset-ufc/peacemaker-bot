@@ -11,6 +11,7 @@ export interface CommentsDocument extends Document {
   event_type: string;
   toxicity_score: number;
   classification: string;
+  parentType?: string;
   solutioned: boolean;
   suggestion_id: string;
   comment_html_url: string;
@@ -30,6 +31,7 @@ const CommentsSchema = new Schema<CommentsDocument>({
   event_type: { type: String, required: true },
   toxicity_score: { type: Number, required: true },
   classification: { type: String, required: true },
+  parentType: { type: String, required: false },
   solutioned: { type: Boolean, required: true, default: false },
   suggestion_id: { type: String, required: false, default: null, sparse: true },
   comment_html_url: { type: String, required: true },

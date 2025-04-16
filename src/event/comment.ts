@@ -76,9 +76,10 @@ export async function handleComment(context: any) {
     console.log('Created comment record => ', commentRecord.id);
   }
 
-  const parent = await Parents.findOne({ gh_parent_id: issue.id });
+  let parent = await Parents.findOne({ gh_parent_id: issue.id });
+  console.log("Parent => ", parent);
   if (!parent && action !== 'edited') {
-    const parentCreated = await Parents.create({
+    parent = await Parents.create({
       comment_id: comment.id,
       gh_parent_id: issue.id,
       gh_parent_number: issue.number,
@@ -88,7 +89,13 @@ export async function handleComment(context: any) {
       type: issue.pull_request ? CommentType.PULL_REQUEST : CommentType.ISSUE,
       created_at: issue.created_at,
     });
-    console.log('Parent created => ', parentCreated.id);
+    console.log('Parent created => ', parent.id);
+  }
+  if (parent) {
+    await Comments.findOneAndUpdate(
+      { gh_comment_id: comment.id },
+      { parentType: parent.type }
+    );
   }
 
   if (action === 'edited') {
