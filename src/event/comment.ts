@@ -116,10 +116,11 @@ export async function handleComment(context: any) {
           });
           context.log.info('Bot moderation comment removed.');
 
-          await Comments.findOneAndUpdate(
-            { gh_comment_id: comment.id },
-            { solutioned: true, bot_comment_id: null },
-          );
+            const suggestion = await Suggestions.findOne({ gh_comment_id: comment.id });
+            await Comments.findOneAndUpdate(
+              { gh_comment_id: comment.id },
+              { solutioned: true, bot_comment_id: null, suggestion_id: suggestion?._id },
+            );
         } catch (err) {
           context.log.error('Error removing bot comment:', err);
         }
@@ -156,7 +157,6 @@ export async function handleComment(context: any) {
         { new: true }
       );
 
-      // once they’ve done it twice, flip the needsAttention flag
       if (commentRecord && Number(commentRecord.editAttempts) >= 2 && !commentRecord.needsAttention) {
         await Comments.updateOne(
           { gh_comment_id: comment.id },
