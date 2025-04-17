@@ -7,7 +7,7 @@ import { UserModel } from '@/services/database.js';
 import { analyzeToxicity } from '@/services/google-perspective.js';
 import {
   generateClassification,
-  generateSuggestions,
+  safeGenerateSuggestions
 } from '@/services/groq.js';
 
 
@@ -63,7 +63,7 @@ export async function handleComment(context: any) {
       },
       { new: true }
     );
-    console.log('Updated comment record => ', commentRecord.id);
+    console.log('Updated comment record => ', commentRecord?.id);
   } else {
     commentRecord = await Comments.create({
       gh_comment_id: comment.id,
@@ -118,7 +118,7 @@ export async function handleComment(context: any) {
 
           await Comments.findOneAndUpdate(
             { gh_comment_id: comment.id },
-            { solutioned: false, suggestion_id: null, bot_comment_id: null },
+            { solutioned: true, bot_comment_id: null },
           );
         } catch (err) {
           context.log.error('Error removing bot comment:', err);
@@ -137,13 +137,19 @@ export async function handleComment(context: any) {
       );
       context.log.info('New classification:', newClassification.incivility);
 
-      const suggestions = await generateSuggestions(
+      const suggestions = await safeGenerateSuggestions(
         comment.body.trim(),
-        newPerspectiveResponse.languages[0],
+        perspectiveResponse.languages[0],
         getModelEnum(user!!.llm_id) || Model.LLAMA_3_3_70B_VERSATILE,
         user!!.groq_key,
         user!!.openai_key,
+        async (snippet) => {
+          const { data } = await analyzeToxicity(snippet);
+          return data.attributeScores.TOXICITY.summaryScore.value;
+        },
+        context
       );
+
       context.log.info('New suggestions:', suggestions);
 
       await Suggestions.deleteMany({ gh_comment_id: comment.id });
@@ -158,7 +164,7 @@ export async function handleComment(context: any) {
         context.log.info('Suggestion created:', suggestionCreated.id);
       });
     }
-    return; 
+    return;
   }
 
   if (
@@ -192,14 +198,22 @@ export async function handleComment(context: any) {
         { bot_comment_id: botComment.data.id }
       );
 
-      // Gera as sugestões de correção
-      const suggestions = await generateSuggestions(
+      // Gera sugestões de correção "seguras"
+      const suggestions = await safeGenerateSuggestions(
         comment.body.trim(),
         perspectiveResponse.languages[0],
-        getModelEnum(user!!.llm_id) || Model.LLAMA_3_3_70B_VERSATILE,
-        user!!.groq_key,
-        user!!.openai_key,
+        getModelEnum(user.llm_id) || Model.LLAMA_3_3_70B_VERSATILE,
+        user?.groq_key,
+        user?.openai_key,
+        async (snippet: string) => {
+          const resp = await analyzeToxicity(snippet);
+          return resp;
+        },
+        context,
+        3,
+        TOXICITY_THRESHOLD
       );
+
       console.log('suggestions => ', JSON.stringify(suggestions, null, 2));
 
       suggestions.map(async suggestion => {

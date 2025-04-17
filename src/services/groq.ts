@@ -61,3 +61,72 @@ export async function generateSuggestions(
 
   return suggestions.object.suggestions;
 }
+
+export async function safeGenerateSuggestions(
+  text: string,
+  language: string,
+  llmModel: Model,
+  groqKey: string,
+  openaiKey: string,
+  analyzeToxicity: (s: string) => Promise<any>,
+  context: any,
+  maxAttempts = 3,
+  threshold = 0.6
+): Promise<{ corrected_comment: string }[]> {
+  let lastBatch: { corrected_comment: string }[] = [];
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    context.log.info(`safeGenerate: attempt ${attempt}…`);
+
+    const suggestions = await generateSuggestions(
+      text,
+      language,
+      llmModel,
+      groqKey,
+      openaiKey
+    );
+    lastBatch = suggestions;
+
+    let allSafe = true;
+
+    for (const s of suggestions) {
+      let resp;
+      try {
+        resp = await analyzeToxicity(s.corrected_comment.trim());
+      } catch (err) {
+        context.log.error("safeGenerate: analyzeToxicity threw", err);
+        allSafe = false;
+        break;
+      }
+
+      const pov = resp?.data;
+      if (
+        !pov ||
+        !pov.attributeScores ||
+        !pov.attributeScores.TOXICITY ||
+        typeof pov.attributeScores.TOXICITY.summaryScore?.value !== "number"
+      ) {
+        context.log.error("safeGenerate: missing attributeScores in", pov);
+        allSafe = false;
+        break;
+      }
+
+      const score = pov.attributeScores.TOXICITY.summaryScore.value;
+      if (score >= threshold) {
+        context.log.info(`safeGenerate: suggestion too toxic (${score}), retrying…`);
+        allSafe = false;
+        break;
+      }
+    }
+
+    if (allSafe) {
+      context.log.info("safeGenerate: all suggestions are under threshold — returning");
+      return suggestions;
+    }
+  }
+
+  context.log.warn(
+    `safeGenerate: exhausted ${maxAttempts} attempts, returning last batch`
+  );
+  return lastBatch;
+}
