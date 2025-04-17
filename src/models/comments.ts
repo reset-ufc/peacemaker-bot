@@ -16,6 +16,8 @@ export interface CommentsDocument extends Document {
   comment_html_url: string;
   issue_id: string;
   bot_comment_id?: string;
+  editAttempts: { type: Number, default: 0 },
+  needsAttention: { type: Boolean, default: false },
   created_at: Date;
 }
 

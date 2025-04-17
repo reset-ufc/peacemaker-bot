@@ -150,6 +150,20 @@ export async function handleComment(context: any) {
         context
       );
 
+      commentRecord = await Comments.findOneAndUpdate(
+        { gh_comment_id: comment.id },
+        { $inc: { editAttempts: 1 } },
+        { new: true }
+      );
+
+      // once they’ve done it twice, flip the needsAttention flag
+      if (commentRecord && Number(commentRecord.editAttempts) >= 2 && !commentRecord.needsAttention) {
+        await Comments.updateOne(
+          { gh_comment_id: comment.id },
+          { needsAttention: true }
+        );
+      }
+
       context.log.info('New suggestions:', suggestions);
 
       await Suggestions.deleteMany({ gh_comment_id: comment.id });
