@@ -140,7 +140,7 @@ export async function handleComment(context: any) {
 
       const suggestions = await safeGenerateSuggestions(
         comment.body.trim(),
-        perspectiveResponse.languages[0],
+        newPerspectiveResponse.languages[0],
         getModelEnum(user!!.llm_id) || Model.LLAMA_3_3_70B_VERSATILE,
         user!!.groq_key,
         user!!.openai_key,
