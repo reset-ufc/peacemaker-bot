@@ -42,7 +42,9 @@ export async function handleComment(context: any) {
   const classification = await generateClassification(
     comment.body.trim(),
     perspectiveResponse.languages[0],
-    getModelEnum(user!!.llm_id) || Model.LLAMA_3_3_70B_VERSATILE
+    getModelEnum(user!!.llm_id) || Model.LLAMA_3_3_70B_VERSATILE,
+    user!!.groq_key,
+    user!!.openai_key,
   );
   context.log.info(
     'Classification => ',
@@ -128,14 +130,19 @@ export async function handleComment(context: any) {
       context.log.info('Comment is still incivilized. Regenerating suggestions.');
       const newClassification = await generateClassification(
         comment.body.trim(),
-        newPerspectiveResponse.languages[0]
+        newPerspectiveResponse.languages[0],
+        getModelEnum(user!!.llm_id) || Model.LLAMA_3_3_70B_VERSATILE,
+        user!!.groq_key,
+        user!!.openai_key,
       );
       context.log.info('New classification:', newClassification.incivility);
 
       const suggestions = await generateSuggestions(
         comment.body.trim(),
         newPerspectiveResponse.languages[0],
-        getModelEnum(user!!.llm_id) || Model.LLAMA_3_3_70B_VERSATILE
+        getModelEnum(user!!.llm_id) || Model.LLAMA_3_3_70B_VERSATILE,
+        user!!.groq_key,
+        user!!.openai_key,
       );
       context.log.info('New suggestions:', suggestions);
 
@@ -189,7 +196,9 @@ export async function handleComment(context: any) {
       const suggestions = await generateSuggestions(
         comment.body.trim(),
         perspectiveResponse.languages[0],
-        getModelEnum(user!!.llm_id) || Model.LLAMA_3_3_70B_VERSATILE
+        getModelEnum(user!!.llm_id) || Model.LLAMA_3_3_70B_VERSATILE,
+        user!!.groq_key,
+        user!!.openai_key,
       );
       console.log('suggestions => ', JSON.stringify(suggestions, null, 2));
 
