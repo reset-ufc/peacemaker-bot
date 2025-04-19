@@ -57,7 +57,7 @@ export async function generateSuggestions(
     }),
     system: prompt.recommendation,
     prompt: content.trim(),
-    temperature: 1,
+    temperature: 0.3,
   });
 
   return suggestions.object.suggestions;
