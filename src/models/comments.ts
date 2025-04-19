@@ -16,8 +16,8 @@ export interface CommentsDocument extends Document {
   comment_html_url: string;
   issue_id: string;
   bot_comment_id?: string;
-  editAttempts: { type: Number, default: 0 },
-  needsAttention: { type: Boolean, default: false },
+  editAttempts: number;
+  needsAttention: boolean;
   created_at: Date;
 }
 
@@ -36,6 +36,8 @@ const CommentsSchema = new Schema<CommentsDocument>({
   suggestion_id: { type: String, required: false, default: null, sparse: true },
   comment_html_url: { type: String, required: true },
   issue_id: { type: String, required: true },
+  editAttempts: { type: Number, required: true, default: 0 },
+  needsAttention: { type: Boolean, required: true, default: false },
   bot_comment_id: { type: String, required: false, default: null },
   created_at: { type: Date, default: Date.now },
 });

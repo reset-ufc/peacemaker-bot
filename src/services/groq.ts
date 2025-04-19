@@ -28,9 +28,10 @@ export async function generateClassification(
   const classification = await generateObject({
     model: resolveModel(model, groq_key, openai_key),
     schema: z.object({
-      classification: z.object({
-        incivility: z.string(),
-      }),
+      classification: z
+        .object({ incivility: z.string() })
+        .optional(),
+      incivility: z.string().optional(),
     }),
     system: prompt.classification,
     prompt: content.trim(),

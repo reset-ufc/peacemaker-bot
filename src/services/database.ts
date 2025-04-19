@@ -14,8 +14,8 @@ export interface UserDocument extends Document {
   avatar_url?: string;
   encrypted_token: string;
   llm_id: string;
-  groq_key?: string;
-  openai_key?: string;
+  groq_api_key?: string;
+  openai_api_key?: string;
   created_at: Date;
 }
 
@@ -31,8 +31,8 @@ const UserSchema = new Schema<UserDocument>({
     required: true,
     default: 'LLAMA_3_3_70B_VERSATILE', // mesmo valor default do outro repo
   },
-  groq_key: { type: String },
-  openai_key: { type: String },
+  groq_api_key: { type: String },
+  openai_api_key: { type: String },
   created_at: { type: Date, required: true, default: Date.now },
 });
 
