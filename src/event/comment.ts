@@ -24,6 +24,13 @@ export async function handleComment(context: any) {
   }
 
   const user = await UserModel.findOne({ gh_user_id: String(author.id) });
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  const llmModel   = getModelEnum(user.llm_id) || Model.LLAMA_3_3_70B_VERSATILE;
+  const groqKey    = user.groq_api_key   ?? '';
+  const openaiKey  = user.openai_api_key ?? '';
 
   const { data: perspectiveResponse } = await analyzeToxicity(comment.body.trim());
   console.log(
@@ -42,9 +49,9 @@ export async function handleComment(context: any) {
   const classification = await generateClassification(
     comment.body.trim(),
     perspectiveResponse.languages[0],
-    getModelEnum(user!!.llm_id) || Model.LLAMA_3_3_70B_VERSATILE,
-    user!!.groq_key,
-    user!!.openai_key,
+    llmModel,
+    groqKey,
+    openaiKey,
   );
   context.log.info(
     'Classification => ',
@@ -78,10 +85,12 @@ export async function handleComment(context: any) {
       classification: classification.incivility,
       suggestion_id: null,
       comment_html_url: comment.html_url,
+      editAttempts: 0,
+      needsAttention: false,
       issue_id: issue.id,
       created_at: comment.created_at,
     });
-    console.log('Created comment record => ', commentRecord.id);
+    console.log('Created comment record => ', commentRecord);
   }
 
   const parent = await Parents.findOne({ gh_parent_id: issue.id });
@@ -128,6 +137,19 @@ export async function handleComment(context: any) {
         context.log.info('No bot comment ID found. Skipping deletion.');
       }
     } else {
+      commentRecord = await Comments.findOneAndUpdate(
+        { gh_comment_id: comment.id },
+        { $inc: { editAttempts: 1 } },
+        { new: true }
+      );
+
+      if (commentRecord && Number(commentRecord.editAttempts) >= 2 && !commentRecord.needsAttention) {
+        commentRecord = await Comments.updateOne(
+          { gh_comment_id: comment.id },
+          { needsAttention: true }
+        );
+      }
+
       context.log.info('Comment is still incivilized. Regenerating suggestions.');
       const newClassification = await generateClassification(
         comment.body.trim(),
@@ -138,45 +160,34 @@ export async function handleComment(context: any) {
       );
       context.log.info('New classification:', newClassification.incivility);
 
-      const suggestions = await safeGenerateSuggestions(
-        comment.body.trim(),
-        newPerspectiveResponse.languages[0],
-        getModelEnum(user!!.llm_id) || Model.LLAMA_3_3_70B_VERSATILE,
-        user!!.groq_key,
-        user!!.openai_key,
-        async (snippet) => {
-          const { data } = await analyzeToxicity(snippet);
-          return data.attributeScores.TOXICITY.summaryScore.value;
-        },
-        context
-      );
-
-      commentRecord = await Comments.findOneAndUpdate(
-        { gh_comment_id: comment.id },
-        { $inc: { editAttempts: 1 } },
-        { new: true }
-      );
-
-      if (commentRecord && Number(commentRecord.editAttempts) >= 2 && !commentRecord.needsAttention) {
-        await Comments.updateOne(
-          { gh_comment_id: comment.id },
-          { needsAttention: true }
+      if(commentRecord && commentRecord.editAttempts < 2) {
+        const suggestions = await safeGenerateSuggestions(
+          comment.body.trim(),
+          perspectiveResponse.languages[0],
+          llmModel,
+          groqKey,
+          openaiKey,
+          async snippet => {
+            const { data } = await analyzeToxicity(snippet);
+            return data.attributeScores.TOXICITY.summaryScore.value;
+          },
+          context
         );
-      }
 
-      context.log.info('New suggestions:', suggestions);
+        context.log.info('New suggestions:', suggestions);
 
-      await Suggestions.deleteMany({ gh_comment_id: comment.id });
-      suggestions.map(async suggestion => {
-        const suggestionCreated = await Suggestions.create({
-          gh_comment_id: comment.id,
-          content: suggestion.corrected_comment,
-          is_edited: false,
-          is_rejected: false,
-          created_at: new Date(),
+        await Suggestions.deleteMany({ gh_comment_id: comment.id });
+        suggestions.map(async suggestion => {
+          const suggestionCreated = await Suggestions.create({
+            gh_comment_id: comment.id,
+            content: suggestion.corrected_comment,
+            is_edited: false,
+            is_rejected: false,
+            created_at: new Date(),
+          });
+          context.log.info('Suggestion created:', suggestionCreated.id);
         });
-        context.log.info('Suggestion created:', suggestionCreated.id);
-      });
+      }
     }
     return;
   }
@@ -191,13 +202,13 @@ export async function handleComment(context: any) {
     if (existingModeration) {
       context.log.info('Bot moderation comment already exists. Skipping creation.');
     } else {
-      const { data: notification } = await context.octokit.reactions.createForIssueComment({
-        owner: repository.owner.login,
-        repo: repository.name,
-        comment_id: comment.id,
-        content: 'eyes',
-      });
-      context.log.info('Notified moderation', notification);
+      // const { data: notification } = await context.octokit.reactions.createForIssueComment({
+      //   owner: repository.owner.login,
+      //   repo: repository.name,
+      //   comment_id: comment.id,
+      //   content: 'eyes',
+      // });
+      // context.log.info('Notified moderation', notification);
 
       const botComment = await context.octokit.issues.createComment({
         owner: repository.owner.login,
@@ -216,16 +227,14 @@ export async function handleComment(context: any) {
       const suggestions = await safeGenerateSuggestions(
         comment.body.trim(),
         perspectiveResponse.languages[0],
-        getModelEnum(user.llm_id) || Model.LLAMA_3_3_70B_VERSATILE,
-        user?.groq_key,
-        user?.openai_key,
-        async (snippet: string) => {
-          const resp = await analyzeToxicity(snippet);
-          return resp;
+        llmModel,
+        groqKey,
+        openaiKey,
+        async snippet => {
+          const { data } = await analyzeToxicity(snippet);
+          return data.attributeScores.TOXICITY.summaryScore.value;
         },
-        context,
-        3,
-        TOXICITY_THRESHOLD
+        context
       );
 
       console.log('suggestions => ', JSON.stringify(suggestions, null, 2));
