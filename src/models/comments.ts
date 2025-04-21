@@ -14,9 +14,12 @@ export interface CommentsDocument extends Document {
   parentType?: string;
   solutioned: boolean;
   suggestion_id: string;
+  parentType: 'issue' | 'pull_request';
   comment_html_url: string;
   issue_id: string;
   bot_comment_id?: string;
+  editAttempts: number;
+  needsAttention: boolean;
   created_at: Date;
 }
 
@@ -34,8 +37,11 @@ const CommentsSchema = new Schema<CommentsDocument>({
   parentType: { type: String, required: false },
   solutioned: { type: Boolean, required: true, default: false },
   suggestion_id: { type: String, required: false, default: null, sparse: true },
+  parentType: { type: String, required: true, enum: ['issue', 'pull_request'] },
   comment_html_url: { type: String, required: true },
   issue_id: { type: String, required: true },
+  editAttempts: { type: Number, required: true, default: 0 },
+  needsAttention: { type: Boolean, required: true, default: false },
   bot_comment_id: { type: String, required: false, default: null },
   created_at: { type: Date, default: Date.now },
 });
