@@ -28,9 +28,11 @@ export async function handleComment(context: any) {
     throw new Error('User not found');
   }
 
+  const parentType = issue.pull_request ? 'pull_request' : 'issue';
+
   const llmModel   = getModelEnum(user.llm_id) || Model.LLAMA_3_3_70B_VERSATILE;
-  const groqKey    = user.groq_api_key   ?? '';
-  const openaiKey  = user.openai_api_key ?? '';
+  const groqKey   = user!!.groq_api_key   ?? '';
+  const openaiKey = user!!.openai_api_key ?? '';
 
   const { data: perspectiveResponse } = await analyzeToxicity(comment.body.trim());
   console.log(
@@ -65,7 +67,8 @@ export async function handleComment(context: any) {
       {
         content: comment.body,
         toxicity_score: perspectiveResponse.attributeScores.TOXICITY.summaryScore.value,
-        classification: classification.incivility,
+        classification: classification?.incivility,
+        parentType,
         created_at: Date.now()
       },
       { new: true }
@@ -84,6 +87,7 @@ export async function handleComment(context: any) {
       toxicity_score: perspectiveResponse.attributeScores.TOXICITY.summaryScore.value,
       classification: classification.incivility,
       suggestion_id: null,
+      parentType,
       comment_html_url: comment.html_url,
       editAttempts: 0,
       needsAttention: false,
