@@ -50,14 +50,14 @@ export async function handleComment(context: any) {
   // Classifica o comentário
   const classification = await generateClassification(
     comment.body.trim(),
-    perspectiveResponse.languages[0],
+    perspectiveResponse.languages[0] || 'en',
     llmModel,
     groqKey,
     openaiKey,
   );
   context.log.info(
     'Classification => ',
-    JSON.stringify(classification.incivility, null, 2),
+    JSON.stringify(classification, null, 2),
   );
 
   let commentRecord;
@@ -67,7 +67,7 @@ export async function handleComment(context: any) {
       {
         content: comment.body,
         toxicity_score: perspectiveResponse.attributeScores.TOXICITY.summaryScore.value,
-        classification: classification?.incivility,
+        classification: classification,
         parentType,
         created_at: Date.now()
       },
@@ -85,7 +85,7 @@ export async function handleComment(context: any) {
       content: comment.body,
       event_type: context.name,
       toxicity_score: perspectiveResponse.attributeScores.TOXICITY.summaryScore.value,
-      classification: classification.incivility,
+      classification: classification,
       suggestion_id: null,
       parentType,
       comment_html_url: comment.html_url,
@@ -136,7 +136,11 @@ export async function handleComment(context: any) {
           });
           context.log.info('Bot moderation comment removed.');
 
-            const suggestion = await Suggestions.findOne({ gh_comment_id: comment.id });
+            const suggestion = await Suggestions.findOne({
+              gh_comment_id: comment.id,
+              content: comment.body,
+            });
+
             await Comments.findOneAndUpdate(
               { gh_comment_id: comment.id },
               { solutioned: true, bot_comment_id: null, suggestion_id: suggestion?._id },
@@ -166,15 +170,15 @@ export async function handleComment(context: any) {
         comment.body.trim(),
         newPerspectiveResponse.languages[0],
         getModelEnum(user!!.llm_id) || Model.LLAMA_3_3_70B_VERSATILE,
-        user!!.groq_key,
-        user!!.openai_key,
+        user!!.groq_api_key,
+        user!!.openai_api_key,
       );
-      context.log.info('New classification:', newClassification.incivility);
+      context.log.info('New classification:', newClassification);
 
       if(commentRecord && commentRecord.editAttempts < 2) {
         const suggestions = await safeGenerateSuggestions(
           comment.body.trim(),
-          perspectiveResponse.languages[0],
+          perspectiveResponse.languages[0] || "en",
           llmModel,
           groqKey,
           openaiKey,
@@ -237,7 +241,7 @@ export async function handleComment(context: any) {
       // Gera sugestões de correção "seguras"
       const suggestions = await safeGenerateSuggestions(
         comment.body.trim(),
-        perspectiveResponse.languages[0],
+        perspectiveResponse.languages[0] || "en",
         llmModel,
         groqKey,
         openaiKey,
