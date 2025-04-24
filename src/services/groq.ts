@@ -1,4 +1,5 @@
 import { createGroq } from '@ai-sdk/groq';
+import { createOpenAI } from '@ai-sdk/openai';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 
@@ -11,7 +12,7 @@ function resolveModel(model: Model, groq_key: string, openai_key: string) {
     return createGroq({apiKey: groq_key})(model);
   }
   if (provider === ModelProvider.OPENAI) {
-    return createGroq({apiKey: openai_key, baseURL: 'https://api.groq.com/openai/v1'})(model);
+    return createOpenAI({apiKey: openai_key})(model);
   }
   throw new Error(`Unsupported model provider for model: ${model}`);
 }
@@ -28,17 +29,16 @@ export async function generateClassification(
   const classification = await generateObject({
     model: resolveModel(model, groq_key, openai_key),
     schema: z.object({
-      classification: z
-        .object({ incivility: z.string() })
-        .optional(),
+      // classification: z
+      //   .object({ incivility: z.string() })
+      //   .optional(),
       incivility: z.string().optional(),
     }),
     system: prompt.classification,
     prompt: content.trim(),
     temperature: 1,
   });
-
-  return classification.object.classification;
+  return classification.object.incivility;
 }
 
 export async function generateSuggestions(

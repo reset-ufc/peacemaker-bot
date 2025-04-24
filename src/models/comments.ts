@@ -11,10 +11,9 @@ export interface CommentsDocument extends Document {
   event_type: string;
   toxicity_score: number;
   classification: string;
-  parentType?: string;
+  parentType?: 'issue' | 'pull_request';
   solutioned: boolean;
   suggestion_id: string;
-  parentType: 'issue' | 'pull_request';
   comment_html_url: string;
   issue_id: string;
   bot_comment_id?: string;
@@ -34,10 +33,9 @@ const CommentsSchema = new Schema<CommentsDocument>({
   event_type: { type: String, required: true },
   toxicity_score: { type: Number, required: true },
   classification: { type: String, required: true },
-  parentType: { type: String, required: false },
+  parentType: { type: String, required: false, enum: ['issue', 'pull_request'] },
   solutioned: { type: Boolean, required: true, default: false },
   suggestion_id: { type: String, required: false, default: null, sparse: true },
-  parentType: { type: String, required: true, enum: ['issue', 'pull_request'] },
   comment_html_url: { type: String, required: true },
   issue_id: { type: String, required: true },
   editAttempts: { type: Number, required: true, default: 0 },
