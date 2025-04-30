@@ -71,9 +71,9 @@ export async function safeGenerateSuggestions(
   openaiKey: string,
   analyzeToxicity: (s: string) => Promise<any>,
   context: any,
-  maxAttempts = 3,
   threshold = 0.6
 ): Promise<{ corrected_comment: string }[]> {
+  const maxAttempts = 3;
   let lastBatch: { corrected_comment: string }[] = [];
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {

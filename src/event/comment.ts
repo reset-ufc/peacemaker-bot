@@ -12,7 +12,7 @@ import {
 
 
 export async function handleComment(context: any) {
-  const TOXICITY_THRESHOLD = 0.6;
+  // const TOXICITY_THRESHOLD = 0.6;
 
   const { action, comment, installation, issue, repository, sender } =
     context.payload as ProbotEvent['payload'];
@@ -22,12 +22,13 @@ export async function handleComment(context: any) {
     context.log.info('Skipping bot comment');
     return;
   }
-
+  console.log('author => ', author);
   const user = await UserModel.findOne({ gh_user_id: String(author.id) });
   if (!user) {
     throw new Error('User not found');
   }
-
+  const TOXICITY_THRESHOLD = user.threshold;
+  console.log('TOXICITY_THRESHOLD => ', TOXICITY_THRESHOLD);
   const parentType = issue.pull_request ? 'pull_request' : 'issue';
 
   const llmModel   = getModelEnum(user.llm_id) || Model.LLAMA_3_3_70B_VERSATILE;
@@ -186,7 +187,8 @@ export async function handleComment(context: any) {
             const { data } = await analyzeToxicity(snippet);
             return data.attributeScores.TOXICITY.summaryScore.value;
           },
-          context
+          context,
+          TOXICITY_THRESHOLD
         );
 
         context.log.info('New suggestions:', suggestions);
@@ -249,7 +251,8 @@ export async function handleComment(context: any) {
           const { data } = await analyzeToxicity(snippet);
           return data.attributeScores.TOXICITY.summaryScore.value;
         },
-        context
+        context,
+        TOXICITY_THRESHOLD
       );
 
       console.log('suggestions => ', JSON.stringify(suggestions, null, 2));
