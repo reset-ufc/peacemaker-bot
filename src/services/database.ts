@@ -16,6 +16,7 @@ export interface UserDocument extends Document {
   llm_id: string;
   groq_api_key?: string;
   openai_api_key?: string;
+  threshold: number;
   created_at: Date;
 }
 
@@ -33,6 +34,7 @@ const UserSchema = new Schema<UserDocument>({
   },
   groq_api_key: { type: String },
   openai_api_key: { type: String },
+  threshold: { type: Number, required: true, default: 0.6 },
   created_at: { type: Date, required: true, default: Date.now },
 });
 
