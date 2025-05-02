@@ -1,66 +1,98 @@
+import axios from 'axios';
+
+export type LLMModel = {
+  id: string;
+  object: string;
+  created: number;
+  owned_by: string;
+  context_window?: number;
+  max_completion_tokens?: number;
+};
+
 export enum ModelProvider {
   GROQ = 'groq',
   OPENAI = 'openai',
 }
 
-export enum Model {
-  // 🟠 Groq - Meta & Google
-  LLAMA_3_3_70B_VERSATILE = 'llama-3.3-70b-versatile',
-  LLAMA_3_1_8B_INSTANT = 'llama-3.1-8b-instant',
-  LLAMA_GUARD_3_8B = 'llama-guard-3-8b',
-  LLAMA_3_70B_8192 = 'llama3-70b-8192',
-  LLAMA_3_8B_8192 = 'llama3-8b-8192',
-  GEMMA2_9B_IT = 'gemma2-9b-it',
+const ensureContextWindow = (models: any[]): LLMModel[] => {
+  return models.map(model => ({
+    ...model,
+    context_window: model.context_window ?? 6000,
+    max_completion_tokens: model.max_completion_tokens ?? 6000,
+  }));
+};
 
-  // 🔵 OpenAI - GPTs
-  GPT_4 = 'gpt-4',
-  GPT_4_0613 = 'gpt-4-0613',
-  GPT_4_1106_PREVIEW = 'gpt-4-1106-preview',
-  GPT_4_TURBO = 'gpt-4-turbo',
-  GPT_4_TURBO_2024_04_09 = 'gpt-4-turbo-2024-04-09',
-  GPT_3_5_TURBO = 'gpt-3.5-turbo',
-  GPT_3_5_TURBO_16K = 'gpt-3.5-turbo-16k',
-  GPT_3_5_TURBO_0613 = 'gpt-3.5-turbo-0613',
-  GPT_3_5_TURBO_1106 = 'gpt-3.5-turbo-1106',
-  GPT_3_5_TURBO_0125 = 'gpt-3.5-turbo-0125',
-}
+export const fetchGroqModels = async (apiKey: string): Promise<LLMModel[]> => {
+  try {
+    const response = await axios.get('https://api.groq.com/openai/v1/models', {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+    });
 
-// 🔁 Mapeamento de provedor
-export const modelProviderMap: Record<Model, ModelProvider> = {
-  [Model.LLAMA_3_3_70B_VERSATILE]: ModelProvider.GROQ,
-  [Model.LLAMA_3_1_8B_INSTANT]: ModelProvider.GROQ,
-  [Model.LLAMA_GUARD_3_8B]: ModelProvider.GROQ,
-  [Model.LLAMA_3_70B_8192]: ModelProvider.GROQ,
-  [Model.LLAMA_3_8B_8192]: ModelProvider.GROQ,
-  [Model.GEMMA2_9B_IT]: ModelProvider.GROQ,
-  [Model.GPT_4]: ModelProvider.OPENAI,
-  [Model.GPT_4_0613]: ModelProvider.OPENAI,
-  [Model.GPT_4_1106_PREVIEW]: ModelProvider.OPENAI,
-  [Model.GPT_4_TURBO]: ModelProvider.OPENAI,
-  [Model.GPT_4_TURBO_2024_04_09]: ModelProvider.OPENAI,
-  [Model.GPT_3_5_TURBO]: ModelProvider.OPENAI,
-  [Model.GPT_3_5_TURBO_16K]: ModelProvider.OPENAI,
-  [Model.GPT_3_5_TURBO_0613]: ModelProvider.OPENAI,
-  [Model.GPT_3_5_TURBO_1106]: ModelProvider.OPENAI,
-  [Model.GPT_3_5_TURBO_0125]: ModelProvider.OPENAI,
-}
+    const filteredModels = (response.data?.data || []).filter(
+      (model: any) => model.active !== false
+    );
 
-// 🔠 Limite de contexto
-export const contextWindowMap: Partial<Record<Model, number>> = {
-  [Model.LLAMA_3_3_70B_VERSATILE]: 128_000,
-  [Model.LLAMA_3_1_8B_INSTANT]: 128_000,
-  [Model.LLAMA_GUARD_3_8B]: 8_192,
-  [Model.LLAMA_3_70B_8192]: 8_192,
-  [Model.LLAMA_3_8B_8192]: 8_192,
-  [Model.GEMMA2_9B_IT]: 8_192,
-}
+    return ensureContextWindow(filteredModels);
+  } catch (error) {
+    console.error('Erro ao buscar modelos do Groq:', error);
+    return [];
+  }
+};
 
-// 🔢 Limite de tokens de geração
-export const maxCompletionTokensMap: Partial<Record<Model, number>> = {
-  [Model.LLAMA_3_3_70B_VERSATILE]: 32_768,
-  [Model.LLAMA_3_1_8B_INSTANT]: 8_192,
-}
+export const fetchOpenAIModels = async (apiKey: string): Promise<LLMModel[]> => {
+  try {
+    const response = await axios.get('https://api.openai.com/v1/models', {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+    });
 
-export const getModelEnum = (value: string): Model | undefined => {
-  return Object.values(Model).includes(value as Model) ? (value as Model) : undefined;
+    const data = (response.data?.data || []).map((model: any) => ({
+      ...model,
+      owned_by: 'openai',
+    }));
+
+    return ensureContextWindow(data);
+  } catch (error) {
+    console.error('Erro ao buscar modelos do OpenAI:', error);
+    return [];
+  }
+};
+
+export const getModelById = async (
+  groqApiKey: string,
+  openAiApiKey: string,
+  modelId: string,
+  fallbackId: string = 'llama-3.3-70b-versatile'
+): Promise<LLMModel> => {
+  const [groqModels, openAiModels] = await Promise.all([
+    fetchGroqModels(groqApiKey),
+    fetchOpenAIModels(openAiApiKey),
+  ]);
+
+  const allModels = [...groqModels, ...openAiModels];
+
+  const selectedModel =
+    allModels.find(m => m.id === modelId) ||
+    allModels.find(m => m.id === fallbackId) ||
+    allModels[0];
+
+  if (!selectedModel) {
+    throw new Error('[LLM] Nenhum modelo disponível foi encontrado.');
+  }
+
+  // Default context window, if not provided
+  if (!selectedModel.context_window) {
+    selectedModel.context_window = 6000;
+  }
+
+  if (selectedModel.id !== modelId) {
+    console.warn(
+      `[LLM] Modelo "${modelId}" não encontrado. Usando modelo alternativo "${selectedModel.id}".`
+    );
+  }
+
+  return selectedModel;
 };
