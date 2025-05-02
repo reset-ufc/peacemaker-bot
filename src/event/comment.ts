@@ -1,4 +1,4 @@
-import { Model, getModelEnum } from '@/enums/models.js';
+import { getModelById } from '@/enums/models.js';
 import { Comments, CommentsDocument } from '@/models/comments.js';
 import { CommentType, Parents } from '@/models/parent.js';
 import { Suggestions } from '@/models/suggestions.js';
@@ -54,12 +54,11 @@ export async function handleComment(context: any) {
 
   const messagesString = messagesToString(allComments as CommentsDocument[]);
 
-  // Você pode agora usar `lastFiveComments` como quiser
   context.log.info(`Last 5 comments: ${messagesString}`);
 
-  const llmModel   = getModelEnum(user.llm_id) || Model.LLAMA_3_3_70B_VERSATILE;
   const groqKey    = user.groq_api_key   ?? '';
   const openaiKey  = user.openai_api_key ?? '';
+  const llmModel   = await getModelById(groqKey, openaiKey, user.llm_id);
 
   const { data: perspectiveResponse } = await analyzeToxicity(comment.body.trim());
   console.log(
@@ -183,9 +182,9 @@ export async function handleComment(context: any) {
       const newClassification = await generateClassification(
         `conversation:\n${messagesString}`,
         newPerspectiveResponse.languages[0],
-        getModelEnum(user!!.llm_id) || Model.LLAMA_3_3_70B_VERSATILE,
-        user!!.groq_key,
-        user!!.openai_key,
+        await getModelById(groqKey, openaiKey, user.llm_id),
+        user!!.groq_api_key,
+        user!!.openai_api_key,
       );
       context.log.info('New classification:', newClassification.incivility);
 
