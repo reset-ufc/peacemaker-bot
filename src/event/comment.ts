@@ -1,5 +1,5 @@
 import { Model, getModelEnum } from '@/enums/models.js';
-import { Comments } from '@/models/comments.js';
+import { Comments, CommentsDocument } from '@/models/comments.js';
 import { CommentType, Parents } from '@/models/parent.js';
 import { Suggestions } from '@/models/suggestions.js';
 import { ProbotEvent } from '@/schemas/event.js';
@@ -10,6 +10,16 @@ import {
   safeGenerateSuggestions
 } from '@/services/groq.js';
 
+function messagesToString(messages: CommentsDocument[]): string {
+  return messages
+    .map((message) => {
+      const sender = message.gh_comment_sender_login;
+      const content = message.content;
+      const date = message.created_at.toISOString();
+      return `[${date}] ${sender}: ${content}`;
+    })
+    .join('\n');
+}
 
 export async function handleComment(context: any) {
   const TOXICITY_THRESHOLD = 0.6;
@@ -27,6 +37,25 @@ export async function handleComment(context: any) {
   if (!user) {
     throw new Error('User not found');
   }
+
+  const lastFiveComments = await Comments.find({ issue_id: String(issue.id) })
+  .sort({ created_at: -1 })
+  .limit(4); // pegamos só 4 do banco
+
+  // Criar um "comentário simulado" com os mesmos campos esperados:
+  const currentComment = {
+    gh_comment_sender_login: sender.login,
+    content: comment.body.trim(),
+    created_at: new Date(comment.created_at), // ou `new Date()` se não vier no payload
+  } as Partial<CommentsDocument>; // ou criar uma interface leve só com os campos usados
+
+  // Combinar e inverter para ordem do mais antigo ao mais novo (opcional)
+  const allComments = [...lastFiveComments.reverse(), currentComment];
+
+  const messagesString = messagesToString(allComments as CommentsDocument[]);
+
+  // Você pode agora usar `lastFiveComments` como quiser
+  context.log.info(`Last 5 comments: ${messagesString}`);
 
   const llmModel   = getModelEnum(user.llm_id) || Model.LLAMA_3_3_70B_VERSATILE;
   const groqKey    = user.groq_api_key   ?? '';
@@ -47,7 +76,7 @@ export async function handleComment(context: any) {
 
   // Classifica o comentário
   const classification = await generateClassification(
-    comment.body.trim(),
+    `conversation:\n${messagesString}`,
     perspectiveResponse.languages[0],
     llmModel,
     groqKey,
@@ -152,7 +181,7 @@ export async function handleComment(context: any) {
 
       context.log.info('Comment is still incivilized. Regenerating suggestions.');
       const newClassification = await generateClassification(
-        comment.body.trim(),
+        `conversation:\n${messagesString}`,
         newPerspectiveResponse.languages[0],
         getModelEnum(user!!.llm_id) || Model.LLAMA_3_3_70B_VERSATILE,
         user!!.groq_key,
@@ -162,7 +191,7 @@ export async function handleComment(context: any) {
 
       if(commentRecord && commentRecord.editAttempts < 2) {
         const suggestions = await safeGenerateSuggestions(
-          comment.body.trim(),
+          `conversation:\n${messagesString}`,
           perspectiveResponse.languages[0],
           llmModel,
           groqKey,
@@ -225,7 +254,7 @@ export async function handleComment(context: any) {
 
       // Gera sugestões de correção "seguras"
       const suggestions = await safeGenerateSuggestions(
-        comment.body.trim(),
+        `conversation:\n${messagesString}`,
         perspectiveResponse.languages[0],
         llmModel,
         groqKey,
