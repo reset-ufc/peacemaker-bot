@@ -21,8 +21,8 @@ export async function generateClassification(
   content: string,
   language: string = 'en',
   model: Model = Model.LLAMA_3_3_70B_VERSATILE,
-  groq_key: string = process.env.GROQ_API_KEY!,
-  openai_key: string = process.env.OPENAI_API_KEY!,
+  groq_key: string,
+  openai_key: string,
 ) {
   const prompt = getPrompts(language);
 
@@ -45,8 +45,8 @@ export async function generateSuggestions(
   content: string,
   language: string = 'en',
   model: Model = Model.LLAMA_3_3_70B_VERSATILE,
-  groq_key: string = process.env.GROQ_API_KEY!,
-  openai_key: string = process.env.OPENAI_API_KEY!,
+  groq_key: string,
+  openai_key: string,
 ): Promise<Array<{ corrected_comment: string }>> {
   const prompt = getPrompts(language);
 
