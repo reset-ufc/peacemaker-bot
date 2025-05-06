@@ -14,6 +14,7 @@ export const userSchema = z.object({
   starred_url: z.string(),
   subscriptions_url: z.string(),
   organizations_url: z.string(),
+  threshold: z.number(),
   repos_url: z.string(),
   events_url: z.string(),
   received_events_url: z.string(),

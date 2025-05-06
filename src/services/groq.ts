@@ -5,7 +5,6 @@ import { z } from 'zod';
 import { LLMModel, ModelProvider } from '@/enums/models.js';
 import { getPrompts } from '@/utils/get-prompts.js';
 
-
 function resolveModel(model: LLMModel, groqKey: string, openaiKey: string) {
   const provider = model.owned_by;
   if (provider !== ModelProvider.OPENAI) {
@@ -21,42 +20,43 @@ export async function generateClassification(
   content: string,
   language: string = 'en',
   model: LLMModel,
-  groqKey: string = process.env.GROQ_API_KEY!,
-  openaiKey: string = process.env.OPENAI_API_KEY!
+  groq_key: string,
+  openai_key: string,
 ) {
   const prompt = getPrompts(language);
 
   const classification = await generateObject({
-    model: resolveModel(model, groqKey, openaiKey),
+    model: resolveModel(model, groq_key, openai_key),
     schema: z.object({
-      classification: z.object({ incivility: z.string() }).optional(),
+      // classification: z
+      //   .object({ incivility: z.string() })
+      //   .optional(),
       incivility: z.string().optional(),
     }),
     system: prompt.classification,
     prompt: content.trim(),
     temperature: 1,
   });
-
-  return classification.object.classification;
+  return classification.object.incivility;
 }
 
 export async function generateSuggestions(
   content: string,
   language: string = 'en',
   model: LLMModel,
-  groqKey: string = process.env.GROQ_API_KEY!,
-  openaiKey: string = process.env.OPENAI_API_KEY!
+  groq_key: string,
+  openai_key: string,
 ): Promise<Array<{ corrected_comment: string }>> {
   const prompt = getPrompts(language);
 
   const suggestions = await generateObject({
-    model: resolveModel(model, groqKey, openaiKey),
+    model: resolveModel(model, groq_key, openai_key),
     schema: z.object({
       suggestions: z.array(z.object({ corrected_comment: z.string() })),
     }),
     system: prompt.recommendation,
     prompt: content.trim(),
-    temperature: 1,
+    temperature: 0.3,
   });
 
   return suggestions.object.suggestions;
@@ -70,9 +70,9 @@ export async function safeGenerateSuggestions(
   openaiKey: string,
   analyzeToxicity: (s: string) => Promise<any>,
   context: any,
-  maxAttempts = 3,
   threshold = 0.6
 ): Promise<{ corrected_comment: string }[]> {
+  const maxAttempts = 3;
   let lastBatch: { corrected_comment: string }[] = [];
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -125,6 +125,8 @@ export async function safeGenerateSuggestions(
     }
   }
 
-  context.log.warn(`safeGenerate: exhausted ${maxAttempts} attempts, returning last batch`);
+  context.log.warn(
+    `safeGenerate: exhausted ${maxAttempts} attempts, returning last batch`
+  );
   return lastBatch;
 }
