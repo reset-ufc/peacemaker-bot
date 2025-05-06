@@ -295,6 +295,7 @@ export async function handleComment(context: any) {
         gh_comment_sender_id: sender.id,
         gh_comment_sender_login: sender.login,
         content: comment.body,
+        classification: 'neutral',
         event_type: context.name,
         toxicity_score: toxicityScore,
         parentType,
