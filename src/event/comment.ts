@@ -285,6 +285,27 @@ export async function handleComment(context: any) {
         { new: true }
       );
       console.log('Updated comment record => ', commentRecord?.id);
+
+      try {
+        await context.octokit.issues.deleteComment({
+          owner: repository.owner.login,
+          repo: repository.name,
+          comment_id: commentRecord?.bot_comment_id,
+        });
+        context.log.info('Bot moderation comment removed.');
+
+          const suggestion = await Suggestions.findOne({
+            gh_comment_id: comment.id,
+            content: comment.body,
+          });
+
+          await Comments.findOneAndUpdate(
+            { gh_comment_id: comment.id },
+            { solutioned: true, bot_comment_id: null, suggestion_id: suggestion?._id },
+          );
+      } catch (err) {
+        context.log.error('Error removing bot comment:', err);
+      }
     } else {
       commentRecord = await Comments.create({
         gh_comment_id: comment.id,
