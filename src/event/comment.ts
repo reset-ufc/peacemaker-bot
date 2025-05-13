@@ -32,13 +32,12 @@ export async function handleComment(context: any) {
     context.log.info('Skipping bot comment');
     return;
   }
-  console.log('author => ', author);
   const user = await UserModel.findOne({ gh_user_id: String(author.id) });
   if (!user) {
     throw new Error('User not found');
   }
+
   const TOXICITY_THRESHOLD = user.threshold;
-  console.log('TOXICITY_THRESHOLD => ', TOXICITY_THRESHOLD);
   const parentType = issue.pull_request ? 'pull_request' : 'issue';
 
   const lastFiveComments = await Comments.find({ issue_id: String(issue.id) })
@@ -262,7 +261,7 @@ export async function handleComment(context: any) {
           owner: repository.owner.login,
           repo: repository.name,
           issue_number: issue.number,
-          body: `@${sender.login} Hi there!\n\nWe noticed some potentially concerning language in your comment.\nPlease take a moment to review our guidelines: https://github.com/apps/thepeacemakerbot\n\nWant to better understand and improve your interactions? Visit our dashboard to review your comments and see suggestions for more positive communication: http://localhost:5173/\n\nLet's work together to maintain a positive atmosphere.\n`,
+          body: `@${sender.login} Hi there!\n\nWe noticed some potentially concerning language in your comment.\nPlease take a moment to review our guidelines: https://github.com/apps/thepeacemakerbot\n\nWant to better understand and improve your interactions? Visit our dashboard to review your comments and see suggestions for more positive communication: https://peacemaker-front-end.vercel.app/\n\nLet's work together to maintain a positive atmosphere.\n`,
         });
         console.log('botComment => ', JSON.stringify(botComment.data, null, 2));
 
@@ -314,6 +313,27 @@ export async function handleComment(context: any) {
         { new: true }
       );
       console.log('Updated comment record => ', commentRecord?.id);
+
+      try {
+        await context.octokit.issues.deleteComment({
+          owner: repository.owner.login,
+          repo: repository.name,
+          comment_id: commentRecord?.bot_comment_id,
+        });
+        context.log.info('Bot moderation comment removed.');
+
+          const suggestion = await Suggestions.findOne({
+            gh_comment_id: comment.id,
+            content: comment.body,
+          });
+
+          await Comments.findOneAndUpdate(
+            { gh_comment_id: comment.id },
+            { solutioned: true, bot_comment_id: null, suggestion_id: suggestion?._id },
+          );
+      } catch (err) {
+        context.log.error('Error removing bot comment:', err);
+      }
     } else {
       commentRecord = await Comments.create({
         gh_comment_id: comment.id,
