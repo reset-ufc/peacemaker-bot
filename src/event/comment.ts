@@ -58,8 +58,8 @@ export async function handleComment(context: any) {
 
   context.log.info(`Last 5 comments: ${messagesString}`);
 
-  const groqKey   = user!!.groq_api_key   ?? '';
-  const openaiKey = user!!.openai_api_key ?? '';
+  const groqKey   = process.env.GROQ_API_KEY ?? '';
+  const openaiKey = process.env.OPENAI_API_KEY ?? '';
   const llmModel   = await getModelById(groqKey, openaiKey, user.llm_id);
 
   const { data: perspectiveResponse } = await analyzeToxicity(comment.body.trim());
@@ -201,8 +201,8 @@ export async function handleComment(context: any) {
           comment.body.trim(),
           newPerspectiveResponse.languages[0],
           await getModelById(groqKey, openaiKey, user.llm_id),
-          user!!.groq_api_key,
-          user!!.openai_api_key,
+          process.env.GROQ_API_KEY ?? '',
+          process.env.OPENAI_API_KEY ?? '',
         );
         context.log.info('New classification:', newClassification);
 
