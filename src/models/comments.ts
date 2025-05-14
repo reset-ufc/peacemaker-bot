@@ -11,11 +11,14 @@ export interface CommentsDocument extends Document {
   event_type: string;
   toxicity_score: number;
   classification: string;
+  parentType?: 'issue' | 'pull_request';
   solutioned: boolean;
   suggestion_id: string;
   comment_html_url: string;
   issue_id: string;
   bot_comment_id?: string;
+  editAttempts: number;
+  needsAttention: boolean;
   created_at: Date;
 }
 
@@ -30,10 +33,13 @@ const CommentsSchema = new Schema<CommentsDocument>({
   event_type: { type: String, required: true },
   toxicity_score: { type: Number, required: true },
   classification: { type: String, required: true },
+  parentType: { type: String, required: false, enum: ['issue', 'pull_request'] },
   solutioned: { type: Boolean, required: true, default: false },
   suggestion_id: { type: String, required: false, default: null, sparse: true },
   comment_html_url: { type: String, required: true },
   issue_id: { type: String, required: true },
+  editAttempts: { type: Number, required: true, default: 0 },
+  needsAttention: { type: Boolean, required: true, default: false },
   bot_comment_id: { type: String, required: false, default: null },
   created_at: { type: Date, default: Date.now },
 });

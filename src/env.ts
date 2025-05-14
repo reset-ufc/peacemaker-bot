@@ -20,7 +20,6 @@ const envSchema = z.object({
     .default(
       'https://commentanalyzer.googleapis.com/$discovery/rest?version=v1alpha1',
     ),
-  GROQ_API_KEY: z.string(),
   MONGODB_URI: z.string().url(),
   PORT: z.coerce.number(),
 });

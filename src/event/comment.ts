@@ -1,32 +1,70 @@
-import { Comments } from '@/models/comments.js';
+import { getModelById } from '@/enums/models.js';
+import { Comments, CommentsDocument } from '@/models/comments.js';
 import { CommentType, Parents } from '@/models/parent.js';
 import { Suggestions } from '@/models/suggestions.js';
 import { ProbotEvent } from '@/schemas/event.js';
+import { UserModel } from '@/services/database.js';
 import { analyzeToxicity } from '@/services/google-perspective.js';
 import {
   generateClassification,
-  generateSuggestions,
+  safeGenerateSuggestions
 } from '@/services/groq.js';
 
+function messagesToString(messages: CommentsDocument[]): string {
+  return messages
+    .map((message) => {
+      const sender = message.gh_comment_sender_login;
+      const content = message.content;
+      const date = message.created_at.toISOString();
+      return `[${date}] ${sender}: ${content}`;
+    })
+    .join('\n');
+}
+
 export async function handleComment(context: any) {
-  const TOXICITY_THRESHOLD = 0.6;
+  // const TOXICITY_THRESHOLD = 0.6;
 
   const { action, comment, installation, issue, repository, sender } =
     context.payload as ProbotEvent['payload'];
-
   const { user: author } = comment;
 
   if (author.type === 'Bot') {
     context.log.info('Skipping bot comment');
     return;
   }
+  const user = await UserModel.findOne({ gh_user_id: String(author.id) });
+  if (!user) {
+    throw new Error('User not found');
+  }
 
-  // Verifica a toxicidade do comentário
-  const { data: perspectiveResponse } = await analyzeToxicity(
-    comment.body.trim(),
-  );
-  context.log.info(
-    'pespertiveResponse => ',
+  const TOXICITY_THRESHOLD = user.threshold;
+  const parentType = issue.pull_request ? 'pull_request' : 'issue';
+
+  const lastFiveComments = await Comments.find({ issue_id: String(issue.id) })
+  .sort({ created_at: -1 })
+  .limit(4); // pegamos só 4 do banco
+
+  // Criar um "comentário simulado" com os mesmos campos esperados:
+  const currentComment = {
+    gh_comment_sender_login: sender.login,
+    content: comment.body.trim(),
+    created_at: new Date(comment.created_at), // ou `new Date()` se não vier no payload
+  } as Partial<CommentsDocument>; // ou criar uma interface leve só com os campos usados
+
+  // Combinar e inverter para ordem do mais antigo ao mais novo (opcional)
+  const allComments = [...lastFiveComments.reverse(), currentComment];
+
+  const messagesString = messagesToString(allComments as CommentsDocument[]);
+
+  context.log.info(`Last 5 comments: ${messagesString}`);
+
+  const groqKey   = user!!.groq_api_key   ?? '';
+  const openaiKey = user!!.openai_api_key ?? '';
+  const llmModel   = await getModelById(groqKey, openaiKey, user.llm_id);
+
+  const { data: perspectiveResponse } = await analyzeToxicity(comment.body.trim());
+  console.log(
+    'perspectiveResponse => ',
     JSON.stringify(
       {
         language: perspectiveResponse.languages[0],
@@ -37,173 +75,287 @@ export async function handleComment(context: any) {
     ),
   );
 
-  // classifica o comentario como uma das categorias descritas
-  // 'bitter_frustration', 'mocking', 'irony', 'insulting', 'vulgarity', 'identity_attack', 'entitlement', 'impatience', 'threat', 'neutral',
-  const classification = await generateClassification(
-    comment.body.trim(),
-    perspectiveResponse.languages[0],
-  );
-  context.log.info(
-    'Classification => ',
-    JSON.stringify(classification.incivility, null, 2),
-  );
-
-  const commentCreated = await Comments.create({
-    gh_comment_id: comment.id,
-    gh_repository_id: repository.id,
-    gh_repository_name: repository.name,
-    gh_repository_owner: repository.owner.login,
-    gh_comment_sender_id: sender.id,
-    gh_comment_sender_login: sender.login,
-    content: comment.body,
-    event_type: context.name,
-    toxicity_score:
-      perspectiveResponse.attributeScores.TOXICITY.summaryScore.value,
-    classification: classification.incivility,
-    suggestion_id: null,
-    comment_html_url: comment.html_url,
-    issue_id: issue.id,
-    created_at: comment.created_at,
-  });
-  context.log.info('commentCreated => ', commentCreated.id);
-
-  const parent = await Parents.findOne({
-    gh_parent_id: issue.id,
-  });
-
-  if (action === 'edited') {
-    const { data: perspectiveResponse } = await analyzeToxicity(
+  const toxicityScore = perspectiveResponse.attributeScores.TOXICITY.summaryScore.value;
+  let commentRecord;
+  if (toxicityScore >= TOXICITY_THRESHOLD) {
+    // Gera classificação
+    const classification = await generateClassification(
       comment.body.trim(),
+      perspectiveResponse.languages[0] || 'en',
+      llmModel,
+      groqKey,
+      openaiKey,
+    );
+    context.log.info(
+      'Classification => ',
+      JSON.stringify(classification, null, 2),
     );
 
-    const currentToxicity =
-      perspectiveResponse.attributeScores.TOXICITY.summaryScore.value;
-    context.log.info(`Reanalysis: toxicity = ${currentToxicity}`);
 
-    if (currentToxicity < TOXICITY_THRESHOLD) {
-      context.log.info(
-        'Comment is no longer incivilized. Removing bot moderation comment.',
+    if (action === 'edited') {
+      commentRecord = await Comments.findOneAndUpdate(
+        { gh_comment_id: comment.id },
+        {
+          content: comment.body,
+          toxicity_score: toxicityScore,
+          classification: classification,
+          parentType,
+          created_at: Date.now()
+        },
+        { new: true }
       );
-
-      const commentRecord = await Comments.findOne({
+      console.log('Updated comment record => ', commentRecord?.id);
+    } else {
+      commentRecord = await Comments.create({
         gh_comment_id: comment.id,
+        gh_repository_id: repository.id,
+        gh_repository_name: repository.name,
+        gh_repository_owner: repository.owner.login,
+        gh_comment_sender_id: sender.id,
+        gh_comment_sender_login: sender.login,
+        content: comment.body,
+        event_type: context.name,
+        toxicity_score: toxicityScore,
+        classification: classification,
+        suggestion_id: null,
+        parentType,
+        comment_html_url: comment.html_url,
+        editAttempts: 0,
+        needsAttention: false,
+        issue_id: issue.id,
+        created_at: comment.created_at,
       });
+      console.log('Created comment record => ', commentRecord);
+    }
 
-      if (commentRecord && commentRecord.bot_comment_id) {
-        try {
-          await context.octokit.issues.deleteComment({
-            owner: repository.owner.login,
-            repo: repository.name,
-            comment_id: commentRecord.bot_comment_id,
+    let parent = await Parents.findOne({ gh_parent_id: issue.id });
+    console.log("Parent => ", parent);
+    if (!parent && action !== 'edited') {
+      parent = await Parents.create({
+        comment_id: comment.id,
+        gh_parent_id: issue.id,
+        gh_parent_number: issue.number,
+        title: issue.title,
+        html_url: issue.html_url,
+        is_open: issue.state,
+        type: issue.pull_request ? CommentType.PULL_REQUEST : CommentType.ISSUE,
+        created_at: issue.created_at,
+      });
+      console.log('Parent created => ', parent.id);
+    }
+    if (parent) {
+      await Comments.findOneAndUpdate(
+        { gh_comment_id: comment.id },
+        { parentType: parent.type }
+      );
+    }
+
+    if (action === 'edited') {
+      context.log.info('Processing edited comment...');
+      const { data: newPerspectiveResponse } = await analyzeToxicity(comment.body.trim());
+      const currentToxicity = newPerspectiveResponse.attributeScores.TOXICITY.summaryScore.value;
+      context.log.info(`Reanalysis: toxicity = ${currentToxicity}`);
+
+      if (currentToxicity < TOXICITY_THRESHOLD) {
+        context.log.info('Comment is no longer incivilized. Removing bot moderation comment.');
+        if (commentRecord && commentRecord.bot_comment_id) {
+          try {
+            await context.octokit.issues.deleteComment({
+              owner: repository.owner.login,
+              repo: repository.name,
+              comment_id: commentRecord.bot_comment_id,
+            });
+            context.log.info('Bot moderation comment removed.');
+
+              const suggestion = await Suggestions.findOne({
+                gh_comment_id: comment.id,
+                content: comment.body,
+              });
+
+              await Comments.findOneAndUpdate(
+                { gh_comment_id: comment.id },
+                { solutioned: true, bot_comment_id: null, suggestion_id: suggestion?._id },
+              );
+          } catch (err) {
+            context.log.error('Error removing bot comment:', err);
+          }
+        } else {
+          context.log.info('No bot comment ID found. Skipping deletion.');
+        }
+      } else {
+        commentRecord = await Comments.findOneAndUpdate(
+          { gh_comment_id: comment.id },
+          { $inc: { editAttempts: 1 } },
+          { new: true }
+        );
+
+        if (commentRecord && Number(commentRecord.editAttempts) >= 2 && !commentRecord.needsAttention) {
+          commentRecord = await Comments.updateOne(
+            { gh_comment_id: comment.id },
+            { needsAttention: true }
+          );
+        }
+
+        context.log.info('Comment is still incivilized. Regenerating suggestions.');
+        const newClassification = await generateClassification(
+          comment.body.trim(),
+          newPerspectiveResponse.languages[0],
+          await getModelById(groqKey, openaiKey, user.llm_id),
+          user!!.groq_api_key,
+          user!!.openai_api_key,
+        );
+        context.log.info('New classification:', newClassification);
+
+        if(commentRecord && commentRecord.editAttempts < 2) {
+          const suggestions = await safeGenerateSuggestions(
+            comment.body.trim(),
+            perspectiveResponse.languages[0] || "en",
+            llmModel,
+            groqKey,
+            openaiKey,
+            async snippet => {
+              const { data } = await analyzeToxicity(snippet);
+              return data.attributeScores.TOXICITY.summaryScore.value;
+            },
+            context,
+            TOXICITY_THRESHOLD
+          );
+
+          context.log.info('New suggestions:', suggestions);
+
+          await Suggestions.deleteMany({ gh_comment_id: comment.id });
+          suggestions.map(async suggestion => {
+            const suggestionCreated = await Suggestions.create({
+              gh_comment_id: comment.id,
+              content: suggestion.corrected_comment,
+              is_edited: false,
+              is_rejected: false,
+              created_at: new Date(),
+            });
+            context.log.info('Suggestion created:', suggestionCreated.id);
           });
-          context.log.info('Bot moderation comment removed.');
+        }
+      }
+      return;
+    }
+
+    if (
+      toxicityScore >= TOXICITY_THRESHOLD
+    ) {
+      const existingModeration = await Comments.findOne({
+        gh_comment_id: comment.id,
+        bot_comment_id: { $ne: null },
+      });
+      if (existingModeration) {
+        context.log.info('Bot moderation comment already exists. Skipping creation.');
+      } else {
+        // const { data: notification } = await context.octokit.reactions.createForIssueComment({
+        //   owner: repository.owner.login,
+        //   repo: repository.name,
+        //   comment_id: comment.id,
+        //   content: 'eyes',
+        // });
+        // context.log.info('Notified moderation', notification);
+
+        const botComment = await context.octokit.issues.createComment({
+          owner: repository.owner.login,
+          repo: repository.name,
+          issue_number: issue.number,
+          body: `@${sender.login} Hi there!\n\nWe noticed some potentially concerning language in your comment.\nPlease take a moment to review our guidelines: https://github.com/apps/thepeacemakerbot\n\nWant to better understand and improve your interactions? Visit our dashboard to review your comments and see suggestions for more positive communication: https://peacemaker-front-end.vercel.app/\n\nLet's work together to maintain a positive atmosphere.\n`,
+        });
+        console.log('botComment => ', JSON.stringify(botComment.data, null, 2));
+
+        await Comments.findOneAndUpdate(
+          { gh_comment_id: comment.id },
+          { bot_comment_id: botComment.data.id }
+        );
+
+        // Gera sugestões de correção "seguras"
+        const suggestions = await safeGenerateSuggestions(
+          comment.body.trim(),
+          perspectiveResponse.languages[0] || "en",
+          llmModel,
+          groqKey,
+          openaiKey,
+          async snippet => {
+            const { data } = await analyzeToxicity(snippet);
+            return data.attributeScores.TOXICITY.summaryScore.value;
+          },
+          context,
+          TOXICITY_THRESHOLD
+        );
+
+        console.log('suggestions => ', JSON.stringify(suggestions, null, 2));
+
+        suggestions.map(async suggestion => {
+          const suggestionCreated = await Suggestions.create({
+            gh_comment_id: comment.id,
+            content: suggestion.corrected_comment,
+            is_edited: false,
+            is_rejected: false,
+            created_at: new Date(),
+          });
+          console.log('Suggestion created => ', JSON.stringify(suggestionCreated.id, null, 2));
+        });
+      }
+    }
+  } else {
+    // Cria ou atualiza o comentário SEM classificação/sugestões
+    if (action === 'edited') {
+      commentRecord = await Comments.findOneAndUpdate(
+        { gh_comment_id: comment.id },
+        {
+          content: comment.body,
+          toxicity_score: toxicityScore,
+          parentType,
+          created_at: Date.now()
+        },
+        { new: true }
+      );
+      console.log('Updated comment record => ', commentRecord?.id);
+
+      try {
+        await context.octokit.issues.deleteComment({
+          owner: repository.owner.login,
+          repo: repository.name,
+          comment_id: commentRecord?.bot_comment_id,
+        });
+        context.log.info('Bot moderation comment removed.');
+
+          const suggestion = await Suggestions.findOne({
+            gh_comment_id: comment.id,
+            content: comment.body,
+          });
 
           await Comments.findOneAndUpdate(
             { gh_comment_id: comment.id },
-            { solutioned: false, suggestion_id: null, bot_comment_id: null },
+            { solutioned: true, bot_comment_id: null, suggestion_id: suggestion?._id },
           );
-        } catch (err) {
-          context.log.error('Error removing bot comment:', err);
-        }
-      } else {
-        context.log.info('No bot comment ID found. Skipping deletion.');
+      } catch (err) {
+        context.log.error('Error removing bot comment:', err);
       }
     } else {
-      context.log.info(
-        'Comment is still incivilized. Regenerating suggestions.',
-      );
-
-      const classification = await generateClassification(
-        comment.body.trim(),
-        perspectiveResponse.languages[0],
-      );
-      context.log.info('New classification:', classification.incivility);
-
-      const suggestions = await generateSuggestions(
-        comment.body.trim(),
-        perspectiveResponse.languages[0],
-      );
-      context.log.info('New suggestions:', suggestions);
-
-      await Suggestions.deleteMany({ gh_comment_id: comment.id });
-      suggestions.map(async suggestion => {
-        const suggestionCreated = await Suggestions.create({
-          gh_comment_id: comment.id,
-          content: suggestion.corrected_comment,
-          is_edited: false,
-          is_rejected: false,
-          created_at: new Date(),
-        });
-        context.log.info('Suggestion created:', suggestionCreated.id);
-      });
-    }
-    return;
-  }
-
-  if (!parent) {
-    const parentCreated = await Parents.create({
-      comment_id: comment.id,
-      gh_parent_id: issue.id,
-      gh_parent_number: issue.number,
-      title: issue.title,
-      html_url: issue.html_url,
-      is_open: issue.state,
-      type: issue.pull_request ? CommentType.PULL_REQUEST : CommentType.ISSUE,
-      created_at: issue.created_at,
-    });
-    context.log.info('parent => ', parentCreated.id);
-  }
-
-  if (
-    perspectiveResponse.attributeScores.TOXICITY.summaryScore.value >=
-    TOXICITY_THRESHOLD
-  ) {
-    // Enviar notificação de moderação
-    const { data: notification } =
-      await context.octokit.reactions.createForIssueComment({
-        owner: repository.owner.login,
-        repo: repository.name,
-        comment_id: comment.id,
-        content: 'eyes',
-      });
-    context.log.info('Notified moderation', notification);
-
-    // Adiciona um comentário para notificar que a moderação foi feita
-    const botComment = await context.octokit.issues.createComment({
-      owner: repository.owner.login,
-      repo: repository.name,
-      issue_number: issue.number,
-      body: `@${sender.login} Hi there!\n\nnoticed some potentially concerning language in your recent comment.\n Would you mind reviewing our guidelines at https://github.com/apps/thepeacemakerbot?\n\nLet's work together to maintain a positive atmosphere.\n`,
-    });
-    context.log.info(
-      'botComment => ',
-      JSON.stringify(botComment.data, null, 2),
-    );
-
-    await Comments.findOneAndUpdate(
-      { gh_comment_id: comment.id },
-      { bot_comment_id: botComment.data.id },
-    );
-
-    // gera as sugestões de solução
-    const suggestions = await generateSuggestions(
-      comment.body.trim(),
-      perspectiveResponse.languages[0],
-    );
-    context.log.info('suggestions => ', JSON.stringify(suggestions, null, 2));
-
-    suggestions.map(async suggestion => {
-      const suggestionCreated = await Suggestions.create({
+      commentRecord = await Comments.create({
         gh_comment_id: comment.id,
-        content: suggestion.corrected_comment,
-        is_edited: false,
-        is_rejected: false,
-        created_at: new Date(),
+        gh_repository_id: repository.id,
+        gh_repository_name: repository.name,
+        gh_repository_owner: repository.owner.login,
+        gh_comment_sender_id: sender.id,
+        gh_comment_sender_login: sender.login,
+        content: comment.body,
+        classification: 'neutral',
+        event_type: context.name,
+        toxicity_score: toxicityScore,
+        parentType,
+        comment_html_url: comment.html_url,
+        editAttempts: 0,
+        needsAttention: false,
+        issue_id: issue.id,
+        created_at: comment.created_at,
       });
-      context.log.info(
-        'suggestionCreated => ',
-        JSON.stringify(suggestionCreated.id, null, 2),
-      );
-    });
+      console.log('Created comment record => ', commentRecord);
+    }
+    // Não gera classificação nem sugestões
+    return;
   }
 }
