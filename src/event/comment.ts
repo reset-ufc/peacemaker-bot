@@ -261,7 +261,7 @@ export async function handleComment(context: any) {
           owner: repository.owner.login,
           repo: repository.name,
           issue_number: issue.number,
-          body: `@${sender.login} Hi there!\n\nWe noticed some potentially concerning language in your comment.\nPlease take a moment to review our guidelines: https://github.com/apps/thepeacemakerbot\n\nWant to better understand and improve your interactions? Visit our dashboard to review your comments and see suggestions for more positive communication: https://peacemaker-front-end.vercel.app/\n\nLet's work together to maintain a positive atmosphere.\n`,
+          body: `@${sender.login} Hi there!\n\nWe noticed some potentially concerning language in your comment.\nPlease take a moment to review our guidelines: https://github.com/apps/thepeacemakerbot\n\nWant to better understand and improve your interactions? Visit our dashboard to review your comments and see suggestions for more positive communication: https://peacemaker-front-end-tau.vercel.app/\n\nLet's work together to maintain a positive atmosphere.\n`,
         });
         console.log('botComment => ', JSON.stringify(botComment.data, null, 2));
 
