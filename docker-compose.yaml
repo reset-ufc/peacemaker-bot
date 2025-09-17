@@ -16,6 +16,6 @@ services:
         - PORT=${PORT:-4000}
 
     env_file:
-      - '.env'
+      - '.env.production'
     ports:
       - '4000:4000'
