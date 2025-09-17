@@ -1,4 +1,4 @@
-import * as dotenv from 'dotenv';
+import dotenv from 'dotenv';
 import { z } from 'zod';
 
 dotenv.config();
@@ -7,7 +7,7 @@ const envSchema = z.object({
   LOG_LEVEL: z
     .enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal'])
     .default('info'),
-  WEBHOOK_PROXY_URL: z.string().url(),
+  WEBHOOK_PROXY_URL: z.string().url().optional(),
   APP_ID: z.string(),
   WEBHOOK_SECRET: z.string(),
   PRIVATE_KEY: z.string(),
