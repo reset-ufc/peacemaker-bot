@@ -1,5 +1,6 @@
 import { type Probot } from 'probot';
 
+import './env.js';
 import { handleComment } from './event/comment.js';
 import { setupDatabase } from './services/database.js';
 
