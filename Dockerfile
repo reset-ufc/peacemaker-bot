@@ -1,6 +1,6 @@
 # syntax = docker/dockerfile:1
 
-ARG NODE_VERSION=20.19.0
+ARG NODE_VERSION=22.19.0
 
 # Base stage with shared configurations
 FROM node:${NODE_VERSION}-slim AS base
@@ -34,7 +34,8 @@ ARG PORT
 ENV NODE_ENV=production \
   LOG_LEVEL=${LOG_LEVEL:-debug} \
   APP_ID=${APP_ID} \
-  PORT=${PORT:-4000}
+  PORT=${PORT:-4000} \
+  HOST=0.0.0.0
 
 # Copy only necessary files from build stage
 COPY --from=build /app/dist ./dist
